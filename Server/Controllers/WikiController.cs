@@ -550,7 +550,7 @@ namespace Server.Controllers
         // (11) 이미지 업로드 (NEW)
         // ------------------------------------------------
         [HttpPost("upload")]
-        public async Task<IActionResult> UploadImage([FromForm] string restaurantId, [FromForm] string nickname, [FromForm] Microsoft.AspNetCore.Http.IFormFile file)
+        public async Task<IActionResult> UploadImage( string restaurantId, string nickname, Microsoft.AspNetCore.Http.IFormFile file)
         {
             try
             {
