@@ -264,7 +264,7 @@ function WikiPage() {
 
     return (
         <div className="page-container">
-            <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '10px', padding: '0', color: 'var(--text-sub)' }}>← 뒤로 가기</button>
+            {/* <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '10px', padding: '0', color: 'var(--text-sub)' }}>← 뒤로 가기</button> */}
 
 
             {/* ★ 0. 상단 이미지 갤러리 (새로 추가됨) */}

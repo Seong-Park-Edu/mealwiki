@@ -144,7 +144,7 @@ function RoulettePage() {
 
   return (
     <div className="page-container">
-      <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '10px', padding: '0', color: 'var(--text-sub)' }}>← 뒤로 가기</button>
+      {/* <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '10px', padding: '0', color: 'var(--text-sub)' }}>← 뒤로 가기</button> */}
       <h1 className="title text-center">🎰 오늘 뭐 먹지?</h1>
 
       {/* ★ 설정 패널 (Card UI 적용) */}

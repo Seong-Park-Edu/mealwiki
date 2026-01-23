@@ -35,7 +35,7 @@ function RankingPage() {
 
     return (
         <div className="page-container">
-            <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '10px', padding:'0', color:'var(--text-sub)' }}>← 뒤로 가기</button>
+            {/* <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '10px', padding:'0', color:'var(--text-sub)' }}>← 뒤로 가기</button> */}
             <h1 className="title text-center">🏆 명예의 전당</h1>
 
             <div className="tab-container">
