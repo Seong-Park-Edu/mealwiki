@@ -1,0 +1,21 @@
+/* src/index.css */
+
+/* 1. HTML과 BODY가 화면 전체를 쓰도록 강제 */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden; /* 가로 스크롤 방지 */
+}
+
+/* 2. 리액트가 들어가는 최상위 뿌리(#root)도 꽉 차게 설정 */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  /* 만약 flex 설정이 있다면 제거하거나 아래처럼 초기화 */
+  display: block; 
+  margin: 0;
+  padding: 0;
+  text-align: left; /* 글자가 가운데 정렬되는 기본 설정 제거 */
+}

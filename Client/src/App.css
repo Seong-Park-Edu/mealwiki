@@ -1,0 +1,529 @@
+/* src/App.css */
+
+/* 1. 디자인 변수 선언 (테마 컬러) */
+:root {
+  --primary: #FF5722;       /* 메인 오렌지 */
+  --secondary: #FF9800;     /* 서브 오렌지 */
+  --accent: #FFC107;        /* 강조 옐로우 */
+  --bg-color: #F8F9FA;      /* 배경색 (아주 연한 회색) */
+  --text-main: #212529;     /* 진한 글자 */
+  --text-sub: #868E96;      /* 연한 글자 */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 요소용 부드러운 그림자 */
+  --radius: 16px;           /* 둥근 모서리 */
+}
+
+/* 2. 전체 초기화 및 폰트 적용 */
+* {
+  box-sizing: border-box;
+  font-family: 'Noto Sans KR', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  /* ★ 수정됨: PC 화면의 빈 공간을 채워줄 배경색 */
+  background-color: #f0f2f5; 
+  /* 스크롤바가 생겨도 배경이 어색하지 않게 처리 */
+  overflow-y: scroll; 
+}
+
+/* 3. 모바일 앱 레이아웃 컨테이너 (PC 뷰 핵심) */
+.app-container {
+  max-width: 600px; /* 너비 제한 */
+  min-height: 100vh; /* 세로로 꽉 차게 */
+  
+  /* ★ 수정됨: 화면 중앙 정렬 */
+  margin: 0 auto;    
+  
+  background-color: white;
+  
+  /* ★ 수정됨: PC에서 앱이 떠 있는 느낌을 주는 그림자 (조금 더 진하게 변경) */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); 
+  
+  padding-bottom: 80px; 
+  position: relative;
+}
+
+/* 4. 내비게이션 바 (상단 고정) */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.nav-links {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-right: 10px;
+  /* 스크롤바 숨기기 (크롬, 사파리 등) */
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+.nav-links::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-item {
+  text-decoration: none;
+  color: var(--text-sub);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.nav-item:hover, .nav-item.active {
+  background-color: #FFF3E0;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* 5. 버튼 스타일 */
+button, .btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.1s, opacity 0.2s;
+}
+
+button:active {
+  transform: scale(0.96);
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  width: 100%;
+}
+
+.btn-search {
+  background: var(--primary);
+  color: white;
+  border-radius: 12px;
+  padding: 0 20px;
+  font-weight: bold;
+}
+
+/* 6. 입력창 스타일 */
+input[type="text"], textarea {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+  background-color: #FAFAFA;
+}
+
+input:focus, textarea:focus {
+  border-color: var(--primary);
+  background-color: white;
+}
+
+/* 7. 카드 스타일 (맛집 리스트) */
+.restaurant-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 15px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.restaurant-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+  border-color: var(--accent);
+}
+
+.category-badge {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--primary);
+  background-color: #FFF3E0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+/* 8. 태그 버튼 스타일 */
+.tag-btn {
+  background: white;
+  border: 1px solid #eee;
+  color: var(--text-sub);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tag-btn.active {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(255, 87, 34, 0.3);
+}
+
+/* 9. 유틸리티 */
+.text-center { text-align: center; }
+.title { font-size: 24px; font-weight: 800; margin-bottom: 20px; color: var(--text-main); }
+.sub-text { font-size: 13px; color: var(--text-sub); }
+
+/* 10. 위키 상세 페이지 헤더 */
+.wiki-header {
+  background: white;
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.wiki-score-board {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.score-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.score-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.score-label {
+  font-size: 12px;
+  color: var(--text-sub);
+}
+
+/* 11. 액션 버튼 그룹 */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.btn-action {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: bold;
+  border: 1px solid #eee;
+  background: white;
+  color: var(--text-main);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.btn-action.active {
+  background-color: #FFF3E0;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* 12. 프로필 카드 */
+.profile-card {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background: white;
+  border-bottom: 1px solid #f5f5f5;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profile-card:hover {
+  background-color: #fafafa;
+}
+
+.rank-badge {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  margin-right: 15px;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-name {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.profile-meta {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+/* 13. 탭 버튼 */
+.tab-container {
+  display: flex;
+  background: #eee;
+  padding: 4px;
+  border-radius: 25px;
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 20px;
+  text-align: center;
+  font-weight: bold;
+  color: var(--text-sub);
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+}
+
+.tab-btn.active {
+  background: white;
+  color: var(--text-main);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* 14. 둥근 검색창 (Search Bar) */
+.search-bar-wrapper {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 50px;
+  padding: 6px 6px 6px 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+  margin-bottom: 25px;
+}
+
+.search-bar-wrapper:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 8px 25px rgba(255, 87, 34, 0.15);
+  transform: translateY(-2px);
+}
+
+.search-input-field {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  background: transparent;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.search-input-field::placeholder {
+  color: #aaa;
+}
+
+.search-btn-inside {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 40px;
+  padding: 10px 24px;
+  font-weight: bold;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 5px rgba(255, 87, 34, 0.3);
+}
+
+.search-btn-inside:hover {
+  background-color: var(--secondary);
+}
+
+.search-btn-inside:active {
+  transform: scale(0.95);
+}
+
+/* 15. 댓글 영역 */
+.comment-section {
+  margin-top: 30px;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.comment-input-area {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.comment-input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+  font-size: 14px;
+}
+
+.comment-input:focus {
+  border-color: var(--primary);
+  background-color: #fff;
+}
+
+.btn-send {
+  background-color: var(--primary);
+  color: white;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.comment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.comment-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.comment-avatar {
+  width: 36px;
+  height: 36px;
+  background-color: #FFF3E0;
+  color: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.comment-bubble {
+  background-color: #f1f3f5;
+  padding: 10px 15px;
+  border-radius: 0 15px 15px 15px;
+  font-size: 14px;
+  color: #333;
+}
+
+.comment-meta {
+  font-size: 11px;
+  color: #999;
+  margin-top: 5px;
+  display: block;
+}
+
+/* 16. 위키 에디터 */
+.wiki-editor-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eee;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: border-color 0.2s;
+}
+
+.wiki-editor-card:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 4px 25px rgba(255, 87, 34, 0.1);
+}
+
+.editor-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.template-chip {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.template-chip:hover {
+  background: #FFF3E0;
+  color: var(--primary);
+  border-color: #FFE0B2;
+}
+
+.wiki-textarea {
+  width: 100%; /* 수정: 95%에서 100%로 변경 (박스 사이징 때문에 꽉 채워도 됨) */
+  border: none;
+  resize: none;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+  background: transparent;
+  min-height: 150px;
+}
+
+.wiki-textarea::placeholder {
+  color: #ccc;
+}
+
+/* 17. 모든 페이지 공통 컨테이너 */
+.page-container {
+  padding: 20px 24px;
+  width: 100%;
+  box-sizing: border-box;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
