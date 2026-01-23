@@ -32,7 +32,7 @@ function NavBar({ isLoggedIn }) {
           😎 내정보
         </Link>
       ) : (
-        <Link to="/login" className="nav-item" style={{ color: '#4CAF50' }}>🔑 로그인</Link>
+        <Link to="/login" className="nav-item" style={{ color: '#4CAF50' }}>🔑</Link>
       )}
     </nav>
   );
