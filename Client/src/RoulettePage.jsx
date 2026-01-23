@@ -152,7 +152,7 @@ function RoulettePage() {
 
         {/* 1. 위치 입력 */}
         <div style={{ marginBottom: '20px' }}>
-          <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#555', marginBottom: '8px' }}>📍 위치 (비워두면 내 주변)</p>
+          <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#555', marginBottom: '8px' }}>📍 위치</p>
           <input
             className="wiki-textarea" // 스타일 재활용 (배경 투명 등)
             style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '10px', height: 'auto', minHeight: 'auto', width: '96%' }}
