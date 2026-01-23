@@ -48,8 +48,9 @@ function RoulettePage() {
   }, []);
 
   const handleStart = async () => {
-    if (!myLoc && !manualLocation) {
-      return alert("위치 정보를 가져오는 중입니다. 잠시 기다리거나 직접 입력해주세요!");
+    // 1. 위치 입력값 검증 (내 위치 GPS가 있더라도 룰렛 페이지의 의도에 맞게 입력 유도)
+    if (!manualLocation.trim()) {
+      return alert("📍 어디 근처에서 찾으실 건가요? \n예: '강남역', '성수동' 등을 입력해주세요!");
     }
     if (isSpinning) return;
 
