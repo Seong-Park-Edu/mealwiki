@@ -8,6 +8,7 @@ import LoginPage from './LoginPage';
 import NearbyPage from './NearbyPage';
 import ChangePasswordPage from './ChangePasswordPage';
 import RankingPage from './RankingPage';
+import PrivacyPage from './pages/PrivacyPage';
 import './App.css'; // ★ CSS 파일 임포트 필수
 
 // NavBar 컴포넌트 (CSS 클래스 적용)
@@ -161,16 +162,51 @@ function App() {
   return (
     <div className="app-container">
       <NavBar isLoggedIn={isLoggedIn} />
-      <Routes>
-        <Route path="/" element={<SearchHome />} />
-        <Route path="/wiki/:id" element={<WikiPage />} />
-        <Route path="/roulette" element={<RoulettePage />} />
-        <Route path="/author/:userId" element={<AuthorPage onLogout={handleLogout} />} />
-        <Route path="/login" element={<LoginPage setIsLoggedIn={setIsLoggedIn} />} />
-        <Route path="/nearby" element={<NearbyPage />} />
-        <Route path="/change-password" element={<ChangePasswordPage />} />
-        <Route path="/ranking" element={<RankingPage />} />
-      </Routes>
+      
+      {/* 메인 콘텐츠 영역 */}
+      <div className="content-area" style={{ minHeight: '80vh' }}>
+        <Routes>
+          <Route path="/" element={<SearchHome />} />
+          <Route path="/wiki/:id" element={<WikiPage />} />
+          <Route path="/roulette" element={<RoulettePage />} />
+          <Route path="/author/:userId" element={<AuthorPage onLogout={handleLogout} />} />
+          <Route path="/login" element={<LoginPage setIsLoggedIn={setIsLoggedIn} />} />
+          <Route path="/nearby" element={<NearbyPage />} />
+          <Route path="/change-password" element={<ChangePasswordPage />} />
+          <Route path="/ranking" element={<RankingPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+        </Routes>
+      </div>
+
+      {/* ★ [추가] 하단 푸터 영역 */}
+      <footer className="footer" style={{
+        padding: '40px 20px',
+        marginTop: '20px',
+        textAlign: 'center',
+        borderTop: '1px solid #eee',
+        backgroundColor: '#fafafa'
+      }}>
+        <div style={{ marginBottom: '10px', fontSize: '14px', color: '#666', fontWeight: 'bold' }}>
+          MealWiki (맛집 위키)
+        </div>
+        <div style={{ marginBottom: '15px' }}>
+          <Link to="/privacy" style={{ 
+            fontSize: '12px', 
+            color: '#999', 
+            textDecoration: 'underline',
+            marginRight: '15px' 
+          }}>
+            개인정보처리방침
+          </Link>
+          <span style={{ fontSize: '12px', color: '#999' }}>|</span>
+          <span style={{ fontSize: '12px', color: '#999', marginLeft: '15px' }}>
+            © 2026 MealWiki
+          </span>
+        </div>
+        <p style={{ fontSize: '11px', color: '#ccc' }}>
+          본 사이트는 공공 데이터 및 사용자 참여를 바탕으로 운영됩니다.
+        </p>
+      </footer>
     </div>
   );
 }
