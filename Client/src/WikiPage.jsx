@@ -53,6 +53,8 @@ function WikiPage() {
     const [images, setImages] = useState([]);
     const fileInputRef = useRef(null); // 숨겨진 파일 input 제어용
 
+    const [isAdmin, setIsAdmin] = useState(false); // 관리자 여부 확인용
+
 
     // ★ [추가] 템플릿 버튼 클릭 핸들러
     const handleTemplateClick = (label) => {
@@ -65,9 +67,14 @@ function WikiPage() {
     useEffect(() => {
         const storedNickname = localStorage.getItem('nickname');
         const storedUserId = localStorage.getItem('userId');
+        const storedRole = localStorage.getItem('role'); // ★ 추가된 role 확인
         if (storedNickname && storedUserId) {
             setMyNickname(storedNickname);
             setIsLoggedIn(true);
+            // ★ 소문자 'admin'인지 체크 (DB 컬럼을 소문자로 바꾸셨으므로)
+            if (storedRole === 'admin' || storedRole === 'Admin') {
+                setIsAdmin(true);
+            }
         }
     }, []);
 
@@ -487,16 +494,22 @@ function WikiPage() {
                 )}
             </div>
 
-            {/* 7. 타임머신 */}
-            <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
-                <button onClick={fetchHistory} className="btn" style={{ fontSize: '13px', color: '#888' }}>🕰️ 수정 내역</button>
-                {showHistory && historyList.map(h => (
-                    <div key={h.id} style={{ padding: '10px', borderBottom: '1px solid #f5f5f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '13px' }}>Ver.{h.version} ({formatDate(h.archivedAt)})</span>
-                        <button onClick={() => handleRollback(h.id)} className="tag-btn" style={{ padding: '4px 8px', fontSize: '11px' }}>복구</button>
-                    </div>
-                ))}
-            </div>
+            {/* 7. 타임머신 (관리자 전용으로 수정) */}
+            {isAdmin && (
+                <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+                    <button onClick={fetchHistory} className="btn" style={{ fontSize: '13px', color: '#888' }}>
+                        🕰️ 수정 내역 (관리자 권한)
+                    </button>
+                    {showHistory && historyList.map(h => (
+                        <div key={h.id} style={{ padding: '10px', borderBottom: '1px solid #f5f5f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '13px' }}>Ver.{h.version} ({formatDate(h.archivedAt)})</span>
+                            <button onClick={() => handleRollback(h.id)} className="tag-btn" style={{ padding: '4px 8px', fontSize: '11px' }}>
+                                복구
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

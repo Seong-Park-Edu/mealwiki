@@ -56,6 +56,7 @@ namespace Server.Controllers
                 Nickname = request.Nickname,
                 Password = request.Password,
                 Email = request.Email,
+                Role = "User",
                 CreatedAt = DateTime.UtcNow,
                 ReviewCount = 0,
                 TotalLikes = 0
@@ -64,7 +65,7 @@ namespace Server.Controllers
             try
             {
                 await _supabase.From<User>().Insert(newUser);
-                return Ok(new { message = "회원가입 성공!", userId = newUser.Id, nickname = newUser.Nickname });
+                return Ok(new { message = "회원가입 성공!", userId = newUser.Id, nickname = newUser.Nickname, role = newUser.Role });
             }
             catch (Exception ex) { return StatusCode(500, $"회원가입 실패: {ex.Message}"); }
         }
@@ -89,7 +90,7 @@ namespace Server.Controllers
                     await _supabase.From<User>().Where(u => u.Id == user.Id).Set(u => u.Email, request.Email).Update();
                 }
 
-                return Ok(new { message = "로그인 성공!", userId = user.Id, nickname = user.Nickname });
+                return Ok(new { message = "로그인 성공!", userId = user.Id, nickname = user.Nickname, role = user.Role });
             }
             catch (Exception ex) { return StatusCode(500, $"로그인 에러: {ex.Message}"); }
         }

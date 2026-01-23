@@ -158,7 +158,7 @@ function NearbyPage() {
 
     return (
         <div className="page-container">
-            <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '10px', padding: '0', color: 'var(--text-sub)' }}>← 뒤로 가기</button>
+            {/* <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '10px', padding: '0', color: 'var(--text-sub)' }}>← 뒤로 가기</button> */}
             <h1 className="title text-center">📍 내 주변 맛집</h1>
 
             {/* 지도 영역 */}

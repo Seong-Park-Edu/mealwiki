@@ -36,5 +36,8 @@ namespace Server.Models
         [Column("email")]
         [JsonProperty("email")]
         public string Email { get; set; } // ★ 추가됨
+
+        [Column("role")] // ★ DB의 소문자 'role' 컬럼과 매핑
+        public string Role { get; set; }
     }
 }

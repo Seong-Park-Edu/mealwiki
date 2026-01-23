@@ -44,9 +44,10 @@ const LoginPage = ({ setIsLoggedIn }) => {
         email // 회원가입/로그인 시 이메일 정보 전송
       });
 
-      // 로그인 성공 처리
+      // 로그인 성공 처리 (로컬 스토리지에 정보 저장)
       localStorage.setItem('userId', response.data.userId);
       localStorage.setItem('nickname', response.data.nickname);
+      localStorage.setItem('role', response.data.role);
       
       alert(response.data.message);
       setIsLoggedIn(true);
