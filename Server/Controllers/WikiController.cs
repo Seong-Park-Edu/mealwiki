@@ -478,6 +478,7 @@ namespace Server.Controllers
             {
                 Id = h.Id,
                 Version = h.Version,
+                Content = h.Content,
                 ArchivedAt = h.ArchivedAt,
                 EditorId = h.EditorId
             });

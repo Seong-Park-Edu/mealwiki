@@ -55,6 +55,8 @@ function WikiPage() {
 
     const [isAdmin, setIsAdmin] = useState(false); // 관리자 여부 확인용
 
+    const [selectedContent, setSelectedContent] = useState(''); // 선택된 텍스트 저장용
+    const [isModalOpen, setIsModalOpen] = useState(false); // 모달 열림 상태 (히스토리 관리용)
 
     // ★ [추가] 템플릿 버튼 클릭 핸들러
     const handleTemplateClick = (label) => {
@@ -501,13 +503,56 @@ function WikiPage() {
                         🕰️ 수정 내역 (관리자 권한)
                     </button>
                     {showHistory && historyList.map(h => (
-                        <div key={h.id} style={{ padding: '10px', borderBottom: '1px solid #f5f5f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '13px' }}>Ver.{h.version} ({formatDate(h.archivedAt)})</span>
-                            <button onClick={() => handleRollback(h.id)} className="tag-btn" style={{ padding: '4px 8px', fontSize: '11px' }}>
+                        <div key={h.id}
+                            onClick={() => { setSelectedContent(h.content); setIsModalOpen(true); }} // 클릭 시 내용 저장 및 팝업 오픈
+                            style={{
+                                padding: '12px',
+                                borderBottom: '1px solid #f5f5f5',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                cursor: 'pointer' // 마우스 커서를 손가락 모양으로 (하드웨어 피드백)
+                            }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Ver.{h.version}</span>
+                                <span style={{ fontSize: '11px', color: '#999' }}>{formatDate(h.archivedAt)}</span>
+                            </div>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleRollback(h.id); }} // 팝업 안 뜨게 이벤트 전파 방지
+                                className="tag-btn"
+                                style={{ padding: '4px 8px', fontSize: '11px' }}
+                            >
                                 복구
                             </button>
                         </div>
                     ))}
+                </div>
+            )}
+
+
+            {/* ★ 히스토리 미리보기 팝업 (모달) */}
+            {isModalOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 1000 // 다른 하드웨어 렌더링 요소보다 위에 표시
+                }} onClick={() => setIsModalOpen(false)}>
+                    <div style={{
+                        backgroundColor: 'white', padding: '20px', borderRadius: '16px',
+                        width: '90%', maxHeight: '70%', overflowY: 'auto', position: 'relative'
+                    }} onClick={(e) => e.stopPropagation()}>
+                        <h4 style={{ margin: '0 0 15px' }}>📄 버전 미리보기</h4>
+                        <div style={{
+                            whiteSpace: 'pre-wrap', // 줄바꿈 보존 (소프트웨어 텍스트 렌더링)
+                            fontSize: '14px', lineHeight: '1.6', color: '#444',
+                            backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px'
+                        }}>
+                            {selectedContent || "내용이 없습니다."}
+                        </div>
+                        <button onClick={() => setIsModalOpen(false)} className="btn-primary" style={{ marginTop: '20px' }}>
+                            닫기
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
