@@ -625,6 +625,40 @@ namespace Server.Controllers
             }
         }
 
+        // (12) 이미지 삭제 (NEW)
+        [HttpDelete("image")]
+        public async Task<IActionResult> DeleteImage([FromQuery] string imageUrl, [FromQuery] string restaurantId)
+        {
+            try
+            {
+                // 1. URL에서 순수 파일명만 추출 (쿼리 스트링 등 제거)
+                // 예: https://.../16534078/abc.jpg?t=123 -> abc.jpg
+                var uri = new Uri(imageUrl);
+                var fileName = Path.GetFileName(uri.LocalPath);
+
+                // 2. ★ 핵심: 하드웨어상의 폴더 경로와 파일명을 조합합니다.
+                // 결과 예: "16534078/abc.jpg"
+                var fullStoragePath = $"{restaurantId}/{fileName}";
+
+                // 3. 하드웨어 스토리지(Supabase Storage)에서 삭제
+                // 버킷명 "food-images"가 정확해야 합니다.
+                await _supabase.Storage
+                    .From("food-images")
+                    .Remove(new List<string> { fullStoragePath });
+
+                // 4. 소프트웨어 DB(PostgreSQL)에서 행 삭제
+                await _supabase.From<WikiImage>()
+                    .Where(x => x.ImageUrl == imageUrl)
+                    .Delete();
+
+                return Ok("하드웨어 스토리지 및 DB 데이터 삭제 완료!");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"하드웨어 삭제 실패: {ex.Message}");
+            }
+        }
+
         [HttpPost("{id}/lock")]
         public async Task<IActionResult> ToggleLock(string id, [FromBody] bool lockStatus)
         {

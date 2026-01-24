@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Server.Models;
 
 namespace Server.Controllers
 {
@@ -18,39 +19,57 @@ namespace Server.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UploadImage(IFormFile file)
+        public async Task<IActionResult> UploadImage([FromForm] IFormFile file, [FromForm] string restaurantId, [FromForm] string nickname)
         {
-            if (file == null || file.Length == 0)
-                return BadRequest("파일이 없습니다.");
+            // 1. 유효성 검사 (데이터가 하드웨어에서 잘 넘어왔는지 확인)
+            if (file == null || file.Length == 0) return BadRequest("파일이 없습니다.");
+            if (string.IsNullOrEmpty(restaurantId)) return BadRequest("식당 ID가 없습니다.");
 
             try
             {
-                // ★ 여기가 핵심 수정 사항입니다 ★
-                // 파일명에서 한글/특수문자를 제거하고 안전한 랜덤 이름으로 바꿉니다.
-                // 예: "사진.jpg" -> ".jpg" -> "uuid-uuid.jpg"
-                var extension = Path.GetExtension(file.FileName); // .png, .jpg 등 가져오기
-                var fileName = $"{Guid.NewGuid()}{extension}"; 
+                // 2. 파일명 처리 (랜덤 UUID 사용으로 충돌 방지)
+                var extension = Path.GetExtension(file.FileName);
+                var fileName = $"{Guid.NewGuid()}{extension}";
+
+                // ★ 핵심: 버킷 안의 '식당ID' 폴더 구조로 업로드 경로 설정
+                var uploadPath = $"{restaurantId}/{fileName}";
 
                 using var memoryStream = new MemoryStream();
                 await file.CopyToAsync(memoryStream);
                 var fileBytes = memoryStream.ToArray();
 
-                // Supabase에 업로드
+                // 3. 하드웨어 스토리지 업로드 (폴더 경로 포함)
                 await _supabase.Storage
                     .From("food-images")
-                    .Upload(fileBytes, fileName);
+                    .Upload(fileBytes, uploadPath);
 
-                // 공개 URL 가져오기
+                // 4. 공개 URL 가져오기
                 var publicUrl = _supabase.Storage
                     .From("food-images")
-                    .GetPublicUrl(fileName);
+                    .GetPublicUrl(uploadPath);
+
+                // 5. ★ 소프트웨어 DB(wiki_images)에 레코드 저장
+                // 닉네임을 통해 유저 정보를 먼저 가져옵니다.
+                var userRes = await _supabase.From<User>().Where(u => u.Nickname == nickname).Get();
+                var user = userRes.Models.FirstOrDefault();
+
+                if (user != null)
+                {
+                    var newImageRecord = new WikiImage
+                    {
+                        RestaurantId = restaurantId,
+                        ImageUrl = publicUrl,
+                        UserId = user.Id,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _supabase.From<WikiImage>().Insert(newImageRecord);
+                }
 
                 return Ok(new { url = publicUrl });
             }
             catch (Exception ex)
             {
-                // 에러 로그를 좀 더 자세히 봅니다.
-                return StatusCode(500, $"업로드 실패: {ex.Message}");
+                return StatusCode(500, $"업로드 및 DB 저장 실패: {ex.Message}");
             }
         }
     }

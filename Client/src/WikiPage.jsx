@@ -237,22 +237,29 @@ function WikiPage() {
         const file = e.target.files[0];
         if (!file) return;
 
-        // FormData 만들기 (파일 전송용)
+        // 1. 값 검증 (하드웨어 전송 전 소프트웨어 가드)
+        if (!myNickname) {
+            alert("사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.");
+            return;
+        }
+
         const formData = new FormData();
         formData.append("file", file);
         formData.append("restaurantId", id);
-        formData.append("nickname", myNickname);
+        formData.append("nickname", myNickname); // 백엔드 [FromForm] 매개변수 명과 일치
 
         setLoading(true);
         try {
-            await axios.post(`${apiUrl}/api/wiki/upload`, formData, {
+            // 2. 경로 수정: /api/wiki/upload -> /api/Upload (컨트롤러 설정에 맞춤)
+            await axios.post(`${apiUrl}/api/Upload`, formData, {
                 headers: { "Content-Type": "multipart/form-data" }
             });
+
             alert("사진이 등록되었습니다! 📸");
-            fetchWiki(); // 새로고침해서 사진 보여주기
+            fetchWiki();
         } catch (error) {
-            console.error(error);
-            alert("업로드 실패 ㅠㅠ");
+            console.error("업로드 에러 상세:", error.response?.data);
+            alert(`업로드 실패: ${error.response?.data || "서버 응답 없음"}`);
         } finally {
             setLoading(false);
         }
@@ -268,6 +275,27 @@ function WikiPage() {
             setIsLocked(!isLocked);
             alert(!isLocked ? "🔒 문서가 보호되었습니다." : "🔓 보호가 해제되었습니다.");
         } catch (e) { alert("잠금 설정 실패"); }
+    };
+
+    // 이미지 삭제 핸들러
+    const handleDeleteImage = async (imgUrl) => {
+        console.log("삭제 시도할 이미지 URL:", imgUrl); // 브라우저 콘솔에서 확인용
+
+        if (!window.confirm("정말 이 사진을 삭제하시겠습니까?")) return;
+
+        try {
+            // DELETE 요청 시 data 필드에 값을 담아 보냅니다.
+            const response = await axios.delete(`${apiUrl}/api/wiki/image`, {
+                params: { imageUrl: imgUrl, restaurantId: id, nickname: myNickname }
+            });
+
+            console.log("서버 응답:", response.data);
+            alert("삭제되었습니다.");
+            await fetchWiki(); // 화면 갱신을 위해 데이터 다시 불러오기
+        } catch (error) {
+            console.error("삭제 통신 에러:", error);
+            alert("삭제 실패: " + (error.response?.data || "네트워크 오류"));
+        }
     };
 
     useEffect(() => {
@@ -300,18 +328,44 @@ function WikiPage() {
                 {images.length > 0 ? (
                     // 이미지가 있을 때: 가로 스크롤 갤러리
                     <div style={{ display: 'flex', overflowX: 'auto', width: '100%', height: '100%', scrollSnapType: 'x mandatory' }}>
+
+                        {/* ★ map 함수 안으로 삭제 버튼을 이동시켜야 imgUrl을 인식합니다. */}
                         {images.map((imgUrl, idx) => (
-                            <img key={idx} src={imgUrl} alt="음식"
-                                style={{
-                                    minWidth: '100%', height: '100%', objectFit: 'cover', scrollSnapAlign: 'start'
-                                }}
-                            />
+                            <div key={idx} style={{ minWidth: '100%', height: '100%', position: 'relative', flexShrink: 0 }}>
+                                <img
+                                    src={imgUrl}
+                                    alt="음식"
+                                    style={{
+                                        width: '100%', height: '100%', objectFit: 'cover', scrollSnapAlign: 'start'
+                                    }}
+                                />
+
+                                {/* ★ 이제 관리자 삭제 버튼이 각 이미지 마다 생성됩니다. */}
+                                {isAdmin && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // 갤러리 클릭 이벤트 간섭 방지
+                                            handleDeleteImage(imgUrl); // 이제 imgUrl을 정상적으로 인식합니다!
+                                        }}
+                                        style={{
+                                            position: 'absolute', top: '10px', right: '10px',
+                                            backgroundColor: 'rgba(255, 0, 0, 0.7)', color: 'white',
+                                            border: 'none', borderRadius: '50%', width: '35px', height: '35px',
+                                            cursor: 'pointer', zIndex: 20,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
+                                        }}
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
                         ))}
+
                         {/* 사진 개수 표시 뱃지 */}
                         <div style={{
                             position: 'absolute', bottom: '15px', right: '15px',
                             background: 'rgba(0,0,0,0.6)', color: 'white',
-                            padding: '4px 10px', borderRadius: '12px', fontSize: '12px'
+                            padding: '4px 10px', borderRadius: '12px', fontSize: '12px', zIndex: 15
                         }}>
                             📸 {images.length}장
                         </div>
