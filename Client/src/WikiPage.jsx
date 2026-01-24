@@ -58,6 +58,8 @@ function WikiPage() {
     const [selectedContent, setSelectedContent] = useState(''); // 선택된 텍스트 저장용
     const [isModalOpen, setIsModalOpen] = useState(false); // 모달 열림 상태 (히스토리 관리용)
 
+    const [isLocked, setIsLocked] = useState(false); // 문서 잠금 상태
+
     // ★ [추가] 템플릿 버튼 클릭 핸들러
     const handleTemplateClick = (label) => {
         const template = `\n📌 ${label}: `;
@@ -91,6 +93,8 @@ function WikiPage() {
 
             if (response.data) {
                 const data = response.data;
+
+                setIsLocked(data.isLocked ?? data.IsLocked ?? false); // 문서 잠금 상태 설정
 
                 // ★ 이미지 데이터 설정
                 setImages(data.Images || data.images || []);
@@ -255,6 +259,17 @@ function WikiPage() {
     };
 
 
+    // handleToggleLock 함수 추가
+    const handleToggleLock = async () => {
+        try {
+            const res = await axios.post(`${apiUrl}/api/wiki/${id}/lock`, !isLocked, {
+                headers: { "Content-Type": "application/json" }
+            });
+            setIsLocked(!isLocked);
+            alert(!isLocked ? "🔒 문서가 보호되었습니다." : "🔓 보호가 해제되었습니다.");
+        } catch (e) { alert("잠금 설정 실패"); }
+    };
+
     useEffect(() => {
         if (loading || !mapContainer.current || !window.kakao) return;
         const draw = () => {
@@ -334,7 +349,13 @@ function WikiPage() {
 
             {/* 1. 헤더 */}
             <div className="wiki-header">
-                <h1 style={{ margin: '0 0 5px 0', fontSize: '22px' }}>{restaurantName || "식당 정보 없음"}</h1>
+                <h1 style={{ margin: '0 0 5px 0', fontSize: '22px' }}>{restaurantName || "식당 정보 없음"}{isLocked && <span style={{ marginLeft: '8px', fontSize: '16px' }}>🔒</span>}
+                    {isAdmin && (
+                        <button onClick={handleToggleLock} style={{ marginLeft: '10px', fontSize: '12px', padding: '4px 8px' }} className="tag-btn">
+                            {isLocked ? "보호 해제" : "문서 보호"}
+                        </button>
+                    )}
+                </h1>
                 <p style={{ margin: 0, color: 'var(--text-sub)', fontSize: '14px' }}>{restaurantAddress}</p>
 
                 <div className="wiki-score-board">
@@ -411,14 +432,29 @@ function WikiPage() {
 
             <div className="wiki-editor-card">
                 {/* 1. 템플릿 툴바 */}
-                <div className="editor-toolbar">
-                    <span style={{ fontSize: '12px', color: '#999', alignSelf: 'center', marginRight: '5px' }}>양식 추가:</span>
-                    <button className="template-chip" onClick={() => handleTemplateClick("영업시간")}>영업시간</button>
-                    <button className="template-chip" onClick={() => handleTemplateClick("추천메뉴")}>추천메뉴</button>
-                    <button className="template-chip" onClick={() => handleTemplateClick("주차정보")}>주차정보</button>
-                    <button className="template-chip" onClick={() => handleTemplateClick("웨이팅팁")}>웨이팅팁</button>
-                    <button className="template-chip" onClick={() => handleTemplateClick("화장실")}>화장실</button>
-                    <button className="template-chip" onClick={() => handleTemplateClick("인원")}>인원</button>
+                <div className="editor-toolbar" style={{
+                    opacity: (isLocked && !isAdmin) ? 0.5 : 1, // 잠겼을 때 툴바 전체 투명도 조절
+                    pointerEvents: (isLocked && !isAdmin) ? 'none' : 'auto' // 클릭 이벤트 하드웨어적 차단
+                }}>
+                    <span style={{ fontSize: '12px', color: '#999', alignSelf: 'center', marginRight: '5px' }}>
+                        {isLocked && !isAdmin ? "🔒 보호 모드:" : "양식 추가:"}
+                    </span>
+
+                    {/* 모든 템플릿 버튼에 disabled 적용 */}
+                    {["영업시간", "추천메뉴", "주차정보", "웨이팅팁", "화장실", "인원"].map(label => (
+                        <button
+                            key={label}
+                            className="template-chip"
+                            onClick={() => handleTemplateClick(label)}
+                            disabled={isLocked && !isAdmin} // ★ 하드웨어 클릭 차단
+                            style={{
+                                cursor: (isLocked && !isAdmin) ? 'not-allowed' : 'pointer',
+                                filter: (isLocked && !isAdmin) ? 'grayscale(1)' : 'none'
+                            }}
+                        >
+                            {label}
+                        </button>
+                    ))}
                 </div>
 
                 {/* 2. 텍스트 에디터 */}
@@ -428,12 +464,23 @@ function WikiPage() {
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder={`이 식당의 정보를 함께 채워주세요!\n\n(예시)\n🕒 영업시간: 매일 11:00 ~ 21:00\n🚗 주차: 가게 앞 2대 가능\n🍽️ 추천: 치즈 돈까스가 정말 맛있어요!`}
+                    disabled={isLocked && !isAdmin} // ★ 잠겨있고 관리자가 아니면 입력 불가
                 />
             </div>
 
             {/* 저장 버튼 (꽉 차게) */}
-            <button onClick={handleSave} className="btn-primary" style={{ marginBottom: '40px', boxShadow: '0 4px 15px rgba(255,87,34, 0.3)' }}>
-                ✨ 위키 저장하기
+            {/* 저장 버튼 수정 */}
+            <button
+                onClick={handleSave}
+                className="btn-primary"
+                disabled={isLocked && !isAdmin} // ★ 잠겨있고 관리자가 아니면 버튼 비활성화
+                style={{
+                    marginBottom: '40px',
+                    opacity: (isLocked && !isAdmin) ? 0.5 : 1, // 시각적 피드백
+                    filter: (isLocked && !isAdmin) ? 'grayscale(1)' : 'none'
+                }}
+            >
+                {isLocked && !isAdmin ? "🔒 보호된 문서입니다" : "✨ 위키 저장하기"}
             </button>
 
             {/* ★ 6. 댓글 영역 (새로 추가됨) */}

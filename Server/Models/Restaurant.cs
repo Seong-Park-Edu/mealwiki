@@ -18,11 +18,14 @@ namespace Server.Models
         [Column("ack_count")]
         public int AckCount { get; set; }
 
-        [Column("x")] 
-        public string X { get; set; } 
-        
-        [Column("y")] 
+        [Column("x")]
+        public string X { get; set; }
+
+        [Column("y")]
         public string Y { get; set; }
+
+        [Column("is_locked")]
+        public bool IsLocked { get; set; }
     }
-    
+
 }

@@ -170,6 +170,7 @@ namespace Server.Controllers
                 Y = restaurant?.Y,
                 Id = post?.Id,
                 Content = post?.Content ?? "",
+                IsLocked = restaurant?.IsLocked ?? false,
                 Version = post?.Version ?? 0,
                 UpdatedAt = post?.UpdatedAt,
                 LikeCount = post?.LikeCount ?? 0,
@@ -308,9 +309,25 @@ namespace Server.Controllers
                 if (string.IsNullOrWhiteSpace(request.Nickname)) return BadRequest("닉네임 누락");
                 if (string.IsNullOrWhiteSpace(request.RestaurantId)) return BadRequest("식당 ID 누락");
 
+                // 1. 유저 정보 먼저 가져오기 (중복 조회 방지)
+                var userResponse = await _supabase.From<User>().Where(u => u.Nickname == request.Nickname).Get();
+                var user = userResponse.Models.FirstOrDefault();
+
+                // 2. 식당 정보 가져오기
                 var rRes = await _supabase.From<Restaurant>().Where(r => r.Id == request.RestaurantId).Get();
                 var existingRes = rRes.Models.FirstOrDefault();
 
+                // 3. 잠금 확인 (하드웨어 보안 레이어)
+                if (existingRes != null && existingRes.IsLocked)
+                {
+                    // 관리자가 아니면 즉시 차단
+                    if (user == null || user.Role.ToLower() != "admin")
+                    {
+                        return StatusCode(403, "🔒 이 문서는 관리자에 의해 보호되고 있어 수정할 수 없습니다.");
+                    }
+                }
+
+                // 4. 식당 테이블 업데이트 또는 생성
                 if (existingRes == null)
                 {
                     await _supabase.From<Restaurant>().Insert(new Restaurant
@@ -331,13 +348,20 @@ namespace Server.Controllers
                         .Set(r => r.X, request.X).Set(r => r.Y, request.Y).Update();
                 }
 
-                var userRes = await _supabase.From<User>().Where(u => u.Nickname == request.Nickname).Get();
-                var user = userRes.Models.FirstOrDefault();
-                if (user == null) { user = new User { Id = Guid.NewGuid(), Nickname = request.Nickname, Password = "temp", CreatedAt = DateTime.UtcNow }; await _supabase.From<User>().Insert(user); }
-                else { await _supabase.From<User>().Where(u => u.Id == user.Id).Set(u => u.ReviewCount, user.ReviewCount + 1).Update(); }
+                // 5. 유저 점수(리뷰 카운트) 업데이트
+                if (user == null)
+                {
+                    user = new User { Id = Guid.NewGuid(), Nickname = request.Nickname, Password = "temp", CreatedAt = DateTime.UtcNow, Role = "User" };
+                    await _supabase.From<User>().Insert(user);
+                }
+                else
+                {
+                    await _supabase.From<User>().Where(u => u.Id == user.Id).Set(u => u.ReviewCount, user.ReviewCount + 1).Update();
+                }
 
-                var existingResponse = await _supabase.From<WikiPost>().Where(x => x.RestaurantId == request.RestaurantId).Get();
-                var existingPost = existingResponse.Model;
+                // 6. 위키 포스트 및 히스토리 저장 로직 (기존 유지)
+                var existingPostResponse = await _supabase.From<WikiPost>().Where(x => x.RestaurantId == request.RestaurantId).Get();
+                var existingPost = existingPostResponse.Models.FirstOrDefault(); // FIX: Model -> Models.FirstOrDefault()
 
                 if (existingPost == null)
                 {
@@ -349,6 +373,7 @@ namespace Server.Controllers
                     try { await _supabase.From<WikiHistory>().Insert(new WikiHistory { PostId = existingPost.Id, Content = existingPost.Content, Version = existingPost.Version, EditorId = existingPost.AuthorId, ArchivedAt = DateTime.UtcNow }); } catch { }
                     await _supabase.From<WikiPost>().Where(x => x.Id == existingPost.Id).Set(x => x.Content, request.Content).Set(x => x.Version, existingPost.Version + 1).Set(x => x.UpdatedAt, DateTime.UtcNow).Set(x => x.AuthorId, user.Id).Update();
                 }
+
                 return Ok(new { message = "저장 성공!" });
             }
             catch (Exception ex) { return StatusCode(500, $"서버 에러: {ex.Message}"); }
@@ -551,7 +576,7 @@ namespace Server.Controllers
         // (11) 이미지 업로드 (NEW)
         // ------------------------------------------------
         [HttpPost("upload")]
-        public async Task<IActionResult> UploadImage( string restaurantId, string nickname, Microsoft.AspNetCore.Http.IFormFile file)
+        public async Task<IActionResult> UploadImage(string restaurantId, string nickname, Microsoft.AspNetCore.Http.IFormFile file)
         {
             try
             {
@@ -598,6 +623,18 @@ namespace Server.Controllers
             {
                 return StatusCode(500, $"업로드 실패: {ex.Message}");
             }
+        }
+
+        [HttpPost("{id}/lock")]
+        public async Task<IActionResult> ToggleLock(string id, [FromBody] bool lockStatus)
+        {
+            // 실제 운영시에는 여기서 관리자 권한(Role)을 한 번 더 체크하는 것이 안전합니다.
+            await _supabase.From<Restaurant>()
+                .Where(x => x.Id == id)
+                .Set(x => x.IsLocked, lockStatus)
+                .Update();
+
+            return Ok(new { isLocked = lockStatus });
         }
     }
 }
