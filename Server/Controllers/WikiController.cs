@@ -14,12 +14,25 @@ namespace Server.Controllers
     // ==========================================
     public class WikiRequestDto
     {
+        [JsonProperty("restaurantId")]
         public string RestaurantId { get; set; } = null!;
+
+        [JsonProperty("restaurantName")]
         public string RestaurantName { get; set; } = null!;
+
+        [JsonProperty("address")]
         public string Address { get; set; } = null!;
+
+        [JsonProperty("content")]
         public string Content { get; set; } = null!;
+
+        [JsonProperty("nickname")]
         public string Nickname { get; set; } = null!;
+
+        [JsonProperty("x")]
         public string X { get; set; } = null!;
+
+        [JsonProperty("y")]
         public string Y { get; set; } = null!;
     }
     public class BookmarkRequestDto
@@ -44,10 +57,17 @@ namespace Server.Controllers
     }
     public class TagVoteRequestDto
     {
+        // 리액트가 보내는 "restaurantId"를 서버의 RestaurantId 변수에 강제로 연결합니다.
+        [JsonProperty("restaurantId")]
         public string RestaurantId { get; set; } = null!;
+
+        [JsonProperty("nickname")]
         public string Nickname { get; set; } = null!;
+
+        [JsonProperty("tag")]
         public string Tag { get; set; } = null!;
     }
+
     public class RollbackRequestDto { public Guid HistoryId { get; set; } }
     public class TagFilterRequestDto
     {
