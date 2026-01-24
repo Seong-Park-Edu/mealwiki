@@ -656,6 +656,53 @@ function WikiPage() {
                     </div>
                 </div>
             )}
+
+
+            {/* 관리자 전용 이미지 관리 섹션 */}
+            {isAdmin && (
+                <div className="restaurant-card" style={{ marginTop: '40px', border: '2px solid #ffebee' }}>
+                    <h3 style={{ fontSize: '16px', color: '#d32f2f', marginBottom: '15px', display: 'flex', alignItems: 'center' }}>
+                        <span style={{ marginRight: '8px' }}>🛠️</span> 이미지 통합 관리 (관리자 전용)
+                    </h3>
+
+                    {images.length > 0 ? (
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                            gap: '12px'
+                        }}>
+                            {images.map((url, idx) => (
+                                <div key={idx} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                                    <img
+                                        src={url}
+                                        alt={`관리용-${idx}`}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
+                                    <button
+                                        onClick={() => handleDeleteImage(url)}
+                                        style={{
+                                            position: 'absolute', top: '5px', right: '5px',
+                                            backgroundColor: 'rgba(211, 47, 47, 0.9)', color: 'white',
+                                            border: 'none', borderRadius: '6px', padding: '4px 8px',
+                                            fontSize: '11px', cursor: 'pointer', fontWeight: 'bold'
+                                        }}
+                                    >
+                                        삭제
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p style={{ color: '#999', fontSize: '13px' }}>등록된 이미지가 없습니다.</p>
+                    )}
+
+                    <p style={{ marginTop: '15px', fontSize: '11px', color: '#999' }}>
+                        ※ 삭제 시 하드웨어 DB와 Storage에서 즉시 영구 삭제되어 용량이 확보됩니다.
+                    </p>
+                </div>
+            )}
+
+
         </div>
     );
 }
