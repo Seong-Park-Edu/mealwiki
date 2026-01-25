@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGeolocation } from '../hooks/useGeolocation'; // 리팩토링한 훅
-import KakaoMap from '../components/KakaoMap'; // 리팩토링한 지도 컴포넌트
+import { useGeolocation } from '../hooks/useGeolocation';
+import KakaoMap from '../components/KakaoMap';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5068';
 
@@ -26,20 +26,25 @@ const fetchFortuneAnalysis = async (name, birthDate, birthTime, gender, mealType
 const FortuneLunchPage = () => {
   const navigate = useNavigate();
   const myLoc = useGeolocation();
-  
+
   // 상태 관리
   const [gender, setGender] = useState('male');
   const [mealType, setMealType] = useState('점심');
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [birthTime, setBirthTime] = useState('');
-  
+
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null); 
-  const [places, setPlaces] = useState([]); 
+  const [result, setResult] = useState(null);
+  const [places, setPlaces] = useState([]);
   const [isApp, setIsApp] = useState(false);
 
-  // ★ [핵심 1] 페이지가 새로고침 되어도 입력했던 값 복구하기 (초기화 로직)
+  const [isAdFinished, setIsAdFinished] = useState(false);
+  
+  // ★ [추가됨] 결과 없음 안내창을 닫았는지 체크하는 상태
+  const [hideNoResult, setHideNoResult] = useState(false);
+
+  // 1. 페이지 로드 시 데이터 복구
   useEffect(() => {
     const savedData = localStorage.getItem('fortune_user_data');
     if (savedData) {
@@ -52,9 +57,9 @@ const FortuneLunchPage = () => {
         if (parsed.mealType) setMealType(parsed.mealType);
       } catch (e) { }
     }
-  }, []); // 닫는 괄호가 여기 있어야 합니다! (기존 코드에선 이게 빠져서 전체를 감싸버림)
+  }, []);
 
-  // ★ [핵심 2] 앱 환경 감지 및 광고 리스너 등록
+  // 2. 앱 환경 감지 및 광고 완료 처리
   useEffect(() => {
     if (window.ReactNativeWebView) {
       setIsApp(true);
@@ -62,16 +67,13 @@ const FortuneLunchPage = () => {
       const handleMessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          
+
           if (data.type === 'AD_COMPLETED') {
-            // 광고 끝나고 돌아오면 "localStorage"에서 꺼내기
-            const savedJson = localStorage.getItem('fortune_user_data');
-            
-            if (savedJson) {
-              const safeData = JSON.parse(savedJson);
-              runAnalysis(safeData); // 저장된 데이터로 바로 분석 시작
-            } else {
-              alert("데이터가 초기화되었습니다. 다시 입력해주세요.");
+            setIsAdFinished(true);
+
+            if (!loading && !result) {
+              const savedJson = localStorage.getItem('fortune_user_data');
+              if (savedJson) runAnalysis(JSON.parse(savedJson));
             }
           }
         } catch (e) { }
@@ -86,27 +88,26 @@ const FortuneLunchPage = () => {
     }
   }, []);
 
-  // 2. 시작 버튼 클릭
+  // 3. 시작 버튼 클릭
   const handleStart = () => {
     if (!name.trim()) return alert("이름을 입력해주세요!");
     if (!birthDate || !birthTime) return alert("생년월일과 시간을 모두 입력해주세요!");
 
-    // ★ [핵심 3] 광고 보러 가기 전에 데이터를 "박제" (영구 저장)
     const userData = { name, birthDate, birthTime, gender, mealType };
     localStorage.setItem('fortune_user_data', JSON.stringify(userData));
 
+    // 분석 시작
+    runAnalysis(userData);
+
     if (isApp) {
-      // 앱이면 광고 요청
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
     } else {
-      // 웹이면 바로 시작
-      runAnalysis(userData);
+      setIsAdFinished(true);
     }
   };
 
-  // 3. AI 분석 및 맛집 검색 실행
+  // 4. AI 분석 및 맛집 검색 실행
   const runAnalysis = async (dataOverride = null) => {
-    // 인자로 받은 데이터가 있으면 그거 쓰고, 없으면 현재 State 씀
     const targetName = dataOverride ? dataOverride.name : name;
     const targetBirthDate = dataOverride ? dataOverride.birthDate : birthDate;
     const targetBirthTime = dataOverride ? dataOverride.birthTime : birthTime;
@@ -118,6 +119,7 @@ const FortuneLunchPage = () => {
     setLoading(true);
     setResult(null);
     setPlaces([]);
+    setHideNoResult(false); // ★ [핵심] 새 분석을 시작할 때, 안내창 숨김 상태를 초기화합니다.
 
     try {
       const aiData = await fetchFortuneAnalysis(targetName, targetBirthDate, targetBirthTime, targetGender, targetMealType);
@@ -125,7 +127,7 @@ const FortuneLunchPage = () => {
       if (aiData) {
         setResult(aiData);
 
-        if (window.kakao && myLoc.loaded && window.kakao.maps.services && myLoc.loaded) {
+        if (window.kakao && myLoc.loaded && window.kakao.maps.services) {
           const ps = new window.kakao.maps.services.Places();
           const searchOptions = {
             location: new window.kakao.maps.LatLng(myLoc.lat, myLoc.lng),
@@ -152,6 +154,7 @@ const FortuneLunchPage = () => {
     }
   };
 
+  // 처음으로 돌아가기 (초기화)
   const handleRetry = () => {
     setResult(null);
     setPlaces([]);
@@ -169,6 +172,13 @@ const FortuneLunchPage = () => {
     });
   };
 
+  // ★ [추가됨] 안내창 닫기 버튼 핸들러
+  const handleCloseOverlay = () => {
+    setHideNoResult(true); // 그냥 안내창만 안 보이게 설정
+  };
+
+  const showResult = result && isAdFinished;
+
   return (
     <div className="page-container">
       <div className="text-center" style={{ marginBottom: '30px' }}>
@@ -176,36 +186,19 @@ const FortuneLunchPage = () => {
         <p className="sub-text">당신의 사주를 분석해 오늘의 메뉴를 추천해 드립니다.</p>
       </div>
 
-      {!result && (
+      {!showResult && (
         <div className="wiki-editor-card">
-          <div style={{ marginBottom: '20px' }}>
+          {/* ... (입력 폼 코드는 기존과 동일) ... */}
+           <div style={{ marginBottom: '20px' }}>
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>이름</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="이름을 입력하세요 (예: 홍길동)"
-              style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }}
-            />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="이름을 입력하세요 (예: 홍길동)" style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }} />
           </div>
 
           <div style={{ marginBottom: '20px' }}>
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>성별</label>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => setGender('male')}
-                className={`btn ${gender === 'male' ? 'btn-primary' : ''}`}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', background: gender === 'male' ? 'var(--primary)' : '#fff', color: gender === 'male' ? '#fff' : '#333' }}
-              >
-                남성 ‍♂️
-              </button>
-              <button
-                onClick={() => setGender('female')}
-                className={`btn ${gender === 'female' ? 'btn-primary' : ''}`}
-                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', background: gender === 'female' ? 'var(--primary)' : '#fff', color: gender === 'female' ? '#fff' : '#333' }}
-              >
-                여성 ‍♀️
-              </button>
+              <button onClick={() => setGender('male')} className={`btn ${gender === 'male' ? 'btn-primary' : ''}`} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', background: gender === 'male' ? 'var(--primary)' : '#fff', color: gender === 'male' ? '#fff' : '#333' }}>남성 ‍♂️</button>
+              <button onClick={() => setGender('female')} className={`btn ${gender === 'female' ? 'btn-primary' : ''}`} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', background: gender === 'female' ? 'var(--primary)' : '#fff', color: gender === 'female' ? '#fff' : '#333' }}>여성 ‍♀️</button>
             </div>
           </div>
 
@@ -213,49 +206,28 @@ const FortuneLunchPage = () => {
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>어떤 식사를 추천받을까요?</label>
             <div style={{ display: 'flex', gap: '8px' }}>
               {['아침', '점심', '저녁'].map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setMealType(type)}
-                  className={`btn`}
-                  style={{
-                    flex: 1,
-                    padding: '10px',
-                    borderRadius: '8px',
-                    border: '1px solid #ddd',
-                    background: mealType === type ? 'var(--primary)' : '#fff',
-                    color: mealType === type ? '#fff' : '#333',
-                    fontWeight: mealType === type ? 'bold' : 'normal'
-                  }}
-                >
-                  {type === '아침' ? '🌅 아침' : type === '점심' ? '☀️ 점심' : '🌙 저녁'}
-                </button>
+                <button key={type} onClick={() => setMealType(type)} className={`btn`} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', background: mealType === type ? 'var(--primary)' : '#fff', color: mealType === type ? '#fff' : '#333', fontWeight: mealType === type ? 'bold' : 'normal' }}>{type === '아침' ? '🌅 아침' : type === '점심' ? '☀️ 점심' : '🌙 저녁'}</button>
               ))}
             </div>
           </div>
 
           <div style={{ marginBottom: '20px' }}>
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>생년월일</label>
-            <input
-              type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)}
-              style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }}
-            />
+            <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }} />
           </div>
 
           <div style={{ marginBottom: '30px' }}>
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>태어난 시간</label>
-            <input
-              type="time" value={birthTime} onChange={(e) => setBirthTime(e.target.value)}
-              style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }}
-            />
+            <input type="time" value={birthTime} onChange={(e) => setBirthTime(e.target.value)} style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }} />
           </div>
 
           <button className="btn-primary" onClick={handleStart} disabled={loading}>
-            {loading ? '천기누설 중... ☁️' : (isApp ? '📺 광고 보고 추천받기' : '결과 무료 확인하기')}
+            {loading ? '천기누설 중... ☁️' : (isApp ? '📺 광고 보고 결과받기' : '결과 무료 확인하기')}
           </button>
         </div>
       )}
 
-      {result && (
+      {showResult && (
         <div className="animate-fade-in">
           <div className="wiki-header" style={{ textAlign: 'left' }}>
             <span className="category-badge">오늘의 운세</span>
@@ -275,18 +247,15 @@ const FortuneLunchPage = () => {
 
           <div className="wiki-editor-card" style={{ padding: '0', overflow: 'hidden', height: '300px' }}>
             {myLoc.loaded ? (
-              <KakaoMap
-                center={myLoc}
-                markers={places}
-                onMarkerClick={handleMarkerClick}
-              />
+              <KakaoMap center={myLoc} markers={places} onMarkerClick={handleMarkerClick} />
             ) : (
               <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f0f0f0' }}>
                 📡 위치 정보를 불러오는 중...
               </div>
             )}
 
-            {myLoc.loaded && places.length === 0 && (
+            {/* ★ [수정됨] hideNoResult가 false일 때만 안내창 표시 */}
+            {myLoc.loaded && places.length === 0 && !hideNoResult && (
               <div style={{
                 position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
                 background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(2px)',
@@ -296,15 +265,14 @@ const FortuneLunchPage = () => {
                 <div style={{ fontSize: '40px', marginBottom: '10px' }}>😭</div>
                 <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>주변에 '{result.menu}' 식당이 없어요.</h3>
                 <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px' }}>
-                  아쉽지만 근처에는 파는 곳이 없네요.<br />
-                  아래 버튼을 눌러 <b>다른 메뉴</b>를 추천받아보세요!
-                </p>
+                  아쉽지만 근처에는 이 메뉴를 파는 곳이 없네요.</p>
+                {/* 버튼 클릭 시 안내창 닫기 */}
                 <button
-                  onClick={handleRetry}
+                  onClick={handleCloseOverlay}
                   className="btn-primary"
                   style={{ width: 'auto', padding: '10px 20px', fontSize: '14px', backgroundColor: '#666' }}
                 >
-                  🔄 다른 메뉴 받기
+                  확인 (창 닫기)
                 </button>
               </div>
             )}
