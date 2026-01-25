@@ -39,19 +39,16 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// 2. HTTP 요청 파이프라인 구성
 
-// ★ [수정됨] Azure(Production 환경)에서도 Swagger가 보이도록 if문을 주석 처리했습니다.
-// if (app.Environment.IsDevelopment()) 
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
-app.UseHttpsRedirection();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // ★ 위에서 만든 "AllowAll" 정책 적용
 app.UseCors("AllowAll");
+
+app.UseHttpsRedirection();
+
 
 app.UseAuthorization();
 

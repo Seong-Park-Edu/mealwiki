@@ -80,37 +80,47 @@ const FortuneLunchPage = () => {
     setPlaces([]); // 기존 검색 결과 초기화
 
 
-    // (1) 백엔드(Gemini)에게 운세와 메뉴 추천받기
-    const aiData = await fetchFortuneAnalysis(name, birthDate, birthTime, gender, mealType);
+    try {
+      // (1) AI 요청
+      const aiData = await fetchFortuneAnalysis(name, birthDate, birthTime, gender, mealType);
 
-    if (aiData) {
-      setResult(aiData);
+      if (aiData) {
+        setResult(aiData); // 결과 표시
 
-      // (2) 추천받은 메뉴로 내 주변 맛집 검색하기
-      // Kakao Places 서비스는 컴포넌트가 아니라 로직이므로 여기서 직접 호출
-      if (window.kakao && myLoc.loaded) {
-        const ps = new window.kakao.maps.services.Places();
-        const searchOptions = {
-          location: new window.kakao.maps.LatLng(myLoc.lat, myLoc.lng),
-          radius: 1500, // 반경 1.5km
-          sort: window.kakao.maps.services.SortBy.DISTANCE
-        };
+        // (2) 지도 검색
+        if (window.kakao && myLoc.loaded) {
+          const ps = new window.kakao.maps.services.Places();
+          const searchOptions = {
+            location: new window.kakao.maps.LatLng(myLoc.lat, myLoc.lng),
+            radius: 1500,
+            sort: window.kakao.maps.services.SortBy.DISTANCE
+          };
 
-        // 예: "강남역 김치찌개" 처럼 검색 정확도를 높임
-        // 만약 메뉴명만으로 검색이 잘 안 되면 `${result.menu} 맛집` 등으로 변경 가능
-        ps.keywordSearch(aiData.menu, (data, status) => {
-          if (status === window.kakao.maps.services.Status.OK) {
-            setPlaces(data); // 검색 결과를 state에 넣으면 -> KakaoMap 컴포넌트가 알아서 그림!
-          } else {
-            // 검색 결과가 없을 경우 (지도는 빈 상태로 둠)
-            console.log("주변에 해당 메뉴의 식당이 없습니다.");
-          }
-        }, searchOptions);
+          ps.keywordSearch(aiData.menu, (data, status) => {
+            if (status === window.kakao.maps.services.Status.OK) {
+              setPlaces(data);
+            } else {
+              setPlaces([]); // 결과 없으면 빈 배열 명시
+            }
+          }, searchOptions);
+        }
+      } else {
+        alert("운세 분석에 실패했습니다. 다시 시도해주세요.");
       }
-    } else {
-      alert("운세 분석에 실패했습니다.");
+    } catch (error) {
+      console.error("분석 중 에러:", error);
+      alert("오류가 발생했습니다.");
+    } finally {
+      // ★ [핵심] 성공하든 실패하든 무조건 로딩을 끈다! (무한 로딩 방지)
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  // 다시하기 핸들러
+  const handleRetry = () => {
+    // 1. 사용자에게 반응을 보여주기 위해 결과창 먼저 닫기
+    setResult(null);
+    setPlaces([]);
   };
 
   // 4. 지도 마커 클릭 시 리뷰 페이지로 이동
@@ -275,7 +285,7 @@ const FortuneLunchPage = () => {
                 </p>
                 {/* 여기서 바로 다시하기를 누를 수 있게 버튼 추가 (선택사항) */}
                 <button
-                  onClick={() => { setResult(null); setPlaces([]); }}
+                  onClick={handleRetry}
                   className="btn-primary"
                   style={{ width: 'auto', padding: '10px 20px', fontSize: '14px', backgroundColor: '#666' }}
                 >
@@ -289,7 +299,7 @@ const FortuneLunchPage = () => {
           <div className="action-buttons">
             <button
               className="btn-action"
-              onClick={() => { setResult(null); setPlaces([]); }}
+              onClick={handleRetry}
               style={{
                 backgroundColor: 'var(--primary)', color: 'white', border: 'none',
                 padding: '15px', fontSize: '16px'

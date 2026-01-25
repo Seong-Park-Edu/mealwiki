@@ -10,11 +10,13 @@ namespace Server.Controllers // 본인의 프로젝트 네임스페이스로 변
     public class GeminiLunchController : ControllerBase
     {
         // ★ 여기에 발급받은 API 키를 넣으세요
-        private readonly string _apiKey = "AIzaSyD7wVPKmNe32lTgCTB1nFUzautb4gZZX68";
+        private readonly string _apiKey;
         private readonly HttpClient _httpClient;
 
-        public GeminiLunchController(IHttpClientFactory httpClientFactory)
+        public GeminiLunchController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
+            // API 키를 비밀 금고(User Secrets)에서 키를 꺼내와서 변수에 넣습니다.
+            _apiKey = configuration["Gemini:ApiKey"] ?? throw new ArgumentNullException("GeminiApiKey 설정이 필요합니다.");
             _httpClient = httpClientFactory.CreateClient();
         }
 
