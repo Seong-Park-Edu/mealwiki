@@ -38,10 +38,13 @@ const FortuneLunchPage = () => {
   const [result, setResult] = useState(null);
   const [places, setPlaces] = useState([]);
   const [isApp, setIsApp] = useState(false);
+
   const [isAdFinished, setIsAdFinished] = useState(false);
+  
+  // ★ [추가됨] 결과 없음 안내창을 닫았는지 체크하는 상태
   const [hideNoResult, setHideNoResult] = useState(false);
 
-  // 1. 초기화 (데이터 복구)
+  // 1. 페이지 로드 시 데이터 복구
   useEffect(() => {
     const savedData = localStorage.getItem('fortune_user_data');
     if (savedData) {
@@ -56,15 +59,18 @@ const FortuneLunchPage = () => {
     }
   }, []);
 
-  // 2. 앱 환경 감지
+  // 2. 앱 환경 감지 및 광고 완료 처리
   useEffect(() => {
     if (window.ReactNativeWebView) {
       setIsApp(true);
+
       const handleMessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+
           if (data.type === 'AD_COMPLETED') {
             setIsAdFinished(true);
+
             if (!loading && !result) {
               const savedJson = localStorage.getItem('fortune_user_data');
               if (savedJson) runAnalysis(JSON.parse(savedJson));
@@ -72,6 +78,7 @@ const FortuneLunchPage = () => {
           }
         } catch (e) { }
       };
+
       window.addEventListener('message', handleMessage);
       document.addEventListener('message', handleMessage);
       return () => {
@@ -81,7 +88,7 @@ const FortuneLunchPage = () => {
     }
   }, []);
 
-  // 3. 시작 버튼
+  // 3. 시작 버튼 클릭
   const handleStart = () => {
     if (!name.trim()) return alert("이름을 입력해주세요!");
     if (!birthDate || !birthTime) return alert("생년월일과 시간을 모두 입력해주세요!");
@@ -89,6 +96,7 @@ const FortuneLunchPage = () => {
     const userData = { name, birthDate, birthTime, gender, mealType };
     localStorage.setItem('fortune_user_data', JSON.stringify(userData));
 
+    // 분석 시작
     runAnalysis(userData);
 
     if (isApp) {
@@ -98,7 +106,7 @@ const FortuneLunchPage = () => {
     }
   };
 
-  // 4. 분석 및 검색
+  // 4. AI 분석 및 맛집 검색 실행
   const runAnalysis = async (dataOverride = null) => {
     const targetName = dataOverride ? dataOverride.name : name;
     const targetBirthDate = dataOverride ? dataOverride.birthDate : birthDate;
@@ -111,7 +119,7 @@ const FortuneLunchPage = () => {
     setLoading(true);
     setResult(null);
     setPlaces([]);
-    setHideNoResult(false);
+    setHideNoResult(false); // ★ [핵심] 새 분석을 시작할 때, 안내창 숨김 상태를 초기화합니다.
 
     try {
       const aiData = await fetchFortuneAnalysis(targetName, targetBirthDate, targetBirthTime, targetGender, targetMealType);
@@ -131,7 +139,7 @@ const FortuneLunchPage = () => {
             if (status === window.kakao.maps.services.Status.OK) {
               setPlaces(data);
             } else {
-              setPlaces([]); // 검색 결과 0개
+              setPlaces([]);
             }
           }, searchOptions);
         }
@@ -146,28 +154,13 @@ const FortuneLunchPage = () => {
     }
   };
 
-  const handleReRecommend = () => {
-    const savedJson = localStorage.getItem('fortune_user_data');
-    if (savedJson) {
-      runAnalysis(JSON.parse(savedJson));
-    } else {
-      handleRetry();
-    }
-  };
-
+  // 처음으로 돌아가기 (초기화)
   const handleRetry = () => {
     setResult(null);
     setPlaces([]);
   };
 
-  const handleCloseOverlay = () => {
-    setHideNoResult(true);
-  };
-
   const handleMarkerClick = (place) => {
-    // ★ [수정] 내 위치 마커를 클릭했을 때는 아무 동작 안 함
-    if (place.id === 'my_location_marker') return;
-
     navigate(`/wiki/${place.id}`, {
       state: {
         name: place.place_name,
@@ -179,20 +172,12 @@ const FortuneLunchPage = () => {
     });
   };
 
-  const showResult = result && isAdFinished;
+  // ★ [추가됨] 안내창 닫기 버튼 핸들러
+  const handleCloseOverlay = () => {
+    setHideNoResult(true); // 그냥 안내창만 안 보이게 설정
+  };
 
-  // ★ [핵심] 지도에 표시할 마커 목록 계산
-  // 검색 결과가 있으면 식당들을 보여주고, 없으면 '내 위치' 하나만 보여줌
-  let displayMarkers = places;
-  if (myLoc.loaded && places.length === 0) {
-    displayMarkers = [{
-      id: 'my_location_marker',     // 특수 ID
-      place_name: '📍 현재 내 위치', // 마커 이름
-      road_address_name: '주변에 추천 메뉴를 파는 식당이 없어요.',
-      x: myLoc.lng,                 // 내 위치 경도
-      y: myLoc.lat                  // 내 위치 위도
-    }];
-  }
+  const showResult = result && isAdFinished;
 
   return (
     <div className="page-container">
@@ -203,10 +188,12 @@ const FortuneLunchPage = () => {
 
       {!showResult && (
         <div className="wiki-editor-card">
-          <div style={{ marginBottom: '20px' }}>
+          {/* ... (입력 폼 코드는 기존과 동일) ... */}
+           <div style={{ marginBottom: '20px' }}>
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>이름</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="이름을 입력하세요 (예: 홍길동)" style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }} />
           </div>
+
           <div style={{ marginBottom: '20px' }}>
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>성별</label>
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -214,6 +201,7 @@ const FortuneLunchPage = () => {
               <button onClick={() => setGender('female')} className={`btn ${gender === 'female' ? 'btn-primary' : ''}`} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', background: gender === 'female' ? 'var(--primary)' : '#fff', color: gender === 'female' ? '#fff' : '#333' }}>여성 ‍♀️</button>
             </div>
           </div>
+
           <div style={{ marginBottom: '20px' }}>
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>어떤 식사를 추천받을까요?</label>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -222,14 +210,17 @@ const FortuneLunchPage = () => {
               ))}
             </div>
           </div>
+
           <div style={{ marginBottom: '20px' }}>
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>생년월일</label>
             <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }} />
           </div>
+
           <div style={{ marginBottom: '30px' }}>
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>태어난 시간</label>
             <input type="time" value={birthTime} onChange={(e) => setBirthTime(e.target.value)} style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }} />
           </div>
+
           <button className="btn-primary" onClick={handleStart} disabled={loading}>
             {loading ? '천기누설 중... ☁️' : (isApp ? '📺 광고 보고 결과받기' : '결과 무료 확인하기')}
           </button>
@@ -242,6 +233,7 @@ const FortuneLunchPage = () => {
             <span className="category-badge">오늘의 운세</span>
             <p style={{ marginTop: '10px', lineHeight: '1.6', color: 'var(--text-main)' }}>{result.fortune}</p>
           </div>
+
           <div className="restaurant-card" style={{ border: '2px solid var(--primary)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
@@ -255,18 +247,14 @@ const FortuneLunchPage = () => {
 
           <div className="wiki-editor-card" style={{ padding: '0', overflow: 'hidden', height: '300px' }}>
             {myLoc.loaded ? (
-              <KakaoMap 
-                center={myLoc} 
-                // ★ [수정] 위에서 만든 displayMarkers를 넣어서 결과가 없어도 내 위치가 나옴
-                markers={displayMarkers} 
-                onMarkerClick={handleMarkerClick} 
-              />
+              <KakaoMap center={myLoc} markers={places} onMarkerClick={handleMarkerClick} />
             ) : (
               <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f0f0f0' }}>
                 📡 위치 정보를 불러오는 중...
               </div>
             )}
 
+            {/* ★ [수정됨] hideNoResult가 false일 때만 안내창 표시 */}
             {myLoc.loaded && places.length === 0 && !hideNoResult && (
               <div style={{
                 position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -277,23 +265,14 @@ const FortuneLunchPage = () => {
                 <div style={{ fontSize: '40px', marginBottom: '10px' }}>😭</div>
                 <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>주변에 '{result.menu}' 식당이 없어요.</h3>
                 <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px' }}>
-                  아쉽지만 근처에는 파는 곳이 없네요.<br />
-                  버튼을 누르면 현재 위치 지도를 볼 수 있습니다.
-                </p>
+                  아쉽지만 근처에는 이 메뉴를 파는 곳이 없네요.</p>
+                {/* 버튼 클릭 시 안내창 닫기 */}
                 <button
                   onClick={handleCloseOverlay}
                   className="btn-primary"
                   style={{ width: 'auto', padding: '10px 20px', fontSize: '14px', backgroundColor: '#666' }}
                 >
-                  확인 (지도 보기)
-                </button>
-                {/* 다른 메뉴 받기 버튼은 안내창 밖이나 아래에 배치해도 좋지만, 여기서는 지도 보기 우선 */}
-                <button
-                  onClick={handleReRecommend}
-                  className="btn-action"
-                  style={{ width: 'auto', padding: '10px 20px', fontSize: '14px', marginTop: '10px', backgroundColor: 'var(--primary)' }}
-                >
-                  🔄 다른 메뉴 받기
+                  확인 (창 닫기)
                 </button>
               </div>
             )}
