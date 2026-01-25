@@ -125,7 +125,7 @@ const FortuneLunchPage = () => {
       if (aiData) {
         setResult(aiData);
 
-        if (window.kakao && myLoc.loaded) {
+        if (window.kakao && myLoc.loaded && window.kakao.maps.services && myLoc.loaded) {
           const ps = new window.kakao.maps.services.Places();
           const searchOptions = {
             location: new window.kakao.maps.LatLng(myLoc.lat, myLoc.lng),
