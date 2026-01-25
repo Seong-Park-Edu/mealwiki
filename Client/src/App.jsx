@@ -9,6 +9,7 @@ import NearbyPage from './NearbyPage';
 import ChangePasswordPage from './ChangePasswordPage';
 import RankingPage from './RankingPage';
 import PrivacyPage from './pages/PrivacyPage';
+import FortuneLunchPage from './pages/FortuneLunchPage';
 import './App.css'; // ★ CSS 파일 임포트 필수
 
 // NavBar 컴포넌트 (CSS 클래스 적용)
@@ -23,14 +24,15 @@ function NavBar({ isLoggedIn }) {
     <nav className="navbar">
       <div className="nav-links">
         <Link to="/" className={isActive('/')}>🏠 홈</Link>
-        <Link to="/nearby" className={isActive('/nearby')}>📍 내주변</Link>
+        <Link to="/fortune" className={isActive('/fortune')}>🔮 운세</Link>
+        <Link to="/nearby" className={isActive('/nearby')}>📍 주변</Link>
         <Link to="/roulette" className={isActive('/roulette')}>🎰 룰렛</Link>
         <Link to="/ranking" className={isActive('/ranking')}>🏆 랭킹</Link>
       </div>
 
       {isLoggedIn ? (
         <Link to={`/author/${userId}`} className="nav-item" style={{ color: '#2196F3' }}>
-          😎 내정보
+          😎
         </Link>
       ) : (
         <Link to="/login" className="nav-item" style={{ color: '#4CAF50' }}>🔑</Link>
@@ -175,6 +177,7 @@ function App() {
           <Route path="/change-password" element={<ChangePasswordPage />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/fortune" element={<FortuneLunchPage />} />
         </Routes>
       </div>
 
