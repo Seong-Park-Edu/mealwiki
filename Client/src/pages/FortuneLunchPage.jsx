@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGeolocation } from '../hooks/useGeolocation'; // 리팩토링한 훅
 import KakaoMap from '../components/KakaoMap'; // 리팩토링한 지도 컴포넌트
@@ -38,16 +38,32 @@ const FortuneLunchPage = () => {
   const [places, setPlaces] = useState([]); // 📍 검색된 맛집 리스트
   const [isApp, setIsApp] = useState(false);
 
-  // 1. 앱 환경 감지 (리워드 광고용)
+  const latestData = useRef({ name, birthDate, birthTime, gender, mealType });
+
+  useEffect(() => {
+    latestData.current = { name, birthDate, birthTime, gender, mealType };
+  }, [name, birthDate, birthTime, gender, mealType]);
+
+
+  // 1. 앱 환경 감지 및 이벤트 리스너 등록
   useEffect(() => {
     if (window.ReactNativeWebView) {
       setIsApp(true);
+
       const handleMessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          if (data.type === 'AD_COMPLETED') runAnalysis(); // 광고 시청 완료 -> 분석 시작
+
+          if (data.type === 'AD_COMPLETED') {
+            // ★ [핵심 3] 광고 끝나고 돌아왔을 때, State가 아니라 Ref(금고)에서 데이터를 꺼냄
+            const currentData = latestData.current;
+
+            // 여기서 바로 분석 시작 (데이터를 인자로 넘겨줌)
+            runAnalysis(currentData);
+          }
         } catch (e) { }
       };
+
       window.addEventListener('message', handleMessage);
       document.addEventListener('message', handleMessage);
       return () => {
@@ -71,21 +87,28 @@ const FortuneLunchPage = () => {
   };
 
   // 3. AI 분석 및 맛집 검색 실행
-  const runAnalysis = async () => {
-    if (!name.trim()) return alert("이름을 입력해주세요!");
+  // ★ [핵심 4] 인자(dataOverride)를 받도록 수정
+  const runAnalysis = async (dataOverride = null) => {
+    // 인자로 받은 데이터가 있으면 그거 쓰고, 없으면 현재 State 씀
+    const targetName = dataOverride ? dataOverride.name : name;
+    const targetBirthDate = dataOverride ? dataOverride.birthDate : birthDate;
+    const targetBirthTime = dataOverride ? dataOverride.birthTime : birthTime;
+    const targetGender = dataOverride ? dataOverride.gender : gender;
+    const targetMealType = dataOverride ? dataOverride.mealType : mealType;
 
+    // 유효성 검사 (최신 데이터 기준)
+    if (!targetName || !targetName.trim()) return alert("이름을 입력해주세요!");
 
     setLoading(true);
     setResult(null);
-    setPlaces([]); // 기존 검색 결과 초기화
-
+    setPlaces([]);
 
     try {
-      // (1) AI 요청
-      const aiData = await fetchFortuneAnalysis(name, birthDate, birthTime, gender, mealType);
+      // (1) AI 요청 (최신 데이터 사용)
+      const aiData = await fetchFortuneAnalysis(targetName, targetBirthDate, targetBirthTime, targetGender, targetMealType);
 
       if (aiData) {
-        setResult(aiData); // 결과 표시
+        setResult(aiData);
 
         // (2) 지도 검색
         if (window.kakao && myLoc.loaded) {
@@ -100,7 +123,7 @@ const FortuneLunchPage = () => {
             if (status === window.kakao.maps.services.Status.OK) {
               setPlaces(data);
             } else {
-              setPlaces([]); // 결과 없으면 빈 배열 명시
+              setPlaces([]);
             }
           }, searchOptions);
         }
@@ -111,7 +134,6 @@ const FortuneLunchPage = () => {
       console.error("분석 중 에러:", error);
       alert("오류가 발생했습니다.");
     } finally {
-      // ★ [핵심] 성공하든 실패하든 무조건 로딩을 끈다! (무한 로딩 방지)
       setLoading(false);
     }
   };
