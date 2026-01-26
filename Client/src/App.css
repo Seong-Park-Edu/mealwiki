@@ -377,6 +377,13 @@ input:focus, textarea:focus {
   transform: scale(0.95);
 }
 
+/* --- [추가] 모바일 하드웨어 대응 (화면 폭 768px 이하) --- */
+@media (max-width: 768px) {
+  .search-btn-inside {
+    display: none; /* 모바일에서는 버튼을 아예 숨김 */
+  }
+}
+
 /* 15. 댓글 영역 */
 .comment-section {
   margin-top: 30px;

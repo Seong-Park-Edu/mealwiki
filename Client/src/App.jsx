@@ -83,15 +83,41 @@ function SearchHome() {
   };
 
   const handleTagFilter = async (tag) => {
+    // 1. [비활성화 로직] 이미 선택된 태그를 다시 클릭한 경우
+    if (activeTag === tag) {
+      setActiveTag(null);    // 활성 태그 초기화
+      setRestaurants([]);   // 리스트 초기화 (혹은 전체 목록 조회 함수 실행)
+      return;               // 아래 API 호출을 실행하지 않고 함수 종료
+    }
+
+    // 2. [활성화 로직] 새로운 태그를 클릭한 경우
     setLoading(true);
     setKeyword('');
     setActiveTag(tag);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5068';
-      const response = await axios.post(`${apiUrl}/api/wiki/filter-by-tag`, { restaurantIds: [], targetTag: tag });
+      const response = await axios.post(`${apiUrl}/api/wiki/filter-by-tag`, {
+        restaurantIds: [],
+        targetTag: tag
+      });
       setRestaurants(response.data);
-    } catch (error) { console.error(error); alert("오류 발생"); } finally { setLoading(false); }
+    } catch (error) {
+      console.error(error);
+      alert("오류 발생");
+    } finally {
+      setLoading(false);
+    }
   };
+
+
+  // 검색 실행 함수에 blur 로직 추가
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter') {
+    searchRestaurants(); // 검색 실행
+    e.currentTarget.blur(); // ★ 핵심: 입력창에서 포커스를 빼서 자판을 내립니다.
+  }
+};
+
 
   return (
     <div className="page-container">
@@ -106,7 +132,7 @@ function SearchHome() {
           className="search-input-field"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && searchRestaurants()}
+          onKeyDown={handleKeyDown}
           placeholder="지역 + 메뉴 (예: 홍대 라멘)"
         />
         <button className="search-btn-inside" onClick={searchRestaurants}>

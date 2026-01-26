@@ -28,13 +28,16 @@ builder.Services.AddScoped<Supabase.Client>(_ =>
 // ★ [수정됨] CORS 설정: 일단 배포 성공을 위해 "모두 허용"으로 변경
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", // 이름도 'AllowAll'로 바꿈
-        policy =>
-        {
-            policy.AllowAnyOrigin()  // 누구든지 들어오세요! (Vercel 주소 몰라도 됨)
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
-        });
+    options.AddPolicy("AllowMealWikiDomains", policy =>
+    {
+        // 허용할 도메인들을 리스트로 작성합니다.
+        policy.WithOrigins(
+                "https://mealwiki.com",           // 구입하신 커스텀 도메인
+                "https://mealwiki.vercel.app" // Vercel 기본 도메인
+              )
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
 });
 
 var app = builder.Build();
@@ -44,8 +47,10 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// ★ 위에서 만든 "AllowAll" 정책 적용
-app.UseCors("AllowAll");
+app.UseRouting();
+
+// ★ 위에서 만든 "AllowMealWikiDomains" 정책 적용
+app.UseCors("AllowMealWikiDomains");
 
 app.UseHttpsRedirection();
 
