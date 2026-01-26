@@ -114,9 +114,6 @@ function NearbyPage() {
         <div className="page-container">
             <h1 className="title text-center">📍 내 주변 맛집</h1>
 
-            {/* [배치 1] 상단 광고: 지도 시작 전 노출 */}
-            {/* <AdSenseUnit isApp={isApp} slotId="상단_광고_ID" /> */}
-
             <div style={{ width: '100%', height: '400px', position: 'relative' }}>
                 {!myLoc.loaded ? (
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', background: '#f0f0f0' }}>
@@ -154,7 +151,7 @@ function NearbyPage() {
             </div>
 
             {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
-            {/* <AdSenseUnit isApp={isApp} slotId="중간_광고_ID" /> */}
+            <AdSenseUnit isApp={isApp} slotId="1571207047" />
 
             {showRoulette && (
                 <div style={{

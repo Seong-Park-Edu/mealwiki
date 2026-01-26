@@ -48,9 +48,8 @@ function SearchHome() {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTag, setActiveTag] = useState(null);
+  const [isApp, setIsApp] = useState(false); // 앱 접속 여부 판단
 
-  // 앱 접속 여부 판단
-  const [isApp, setIsApp] = useState(false);
   useEffect(() => {
     // 이름표(User-Agent)를 확인하여 앱 여부 판별
     const ua = window.navigator.userAgent;
@@ -111,20 +110,17 @@ function SearchHome() {
 
 
   // 검색 실행 함수에 blur 로직 추가
-const handleKeyDown = (e) => {
-  if (e.key === 'Enter') {
-    searchRestaurants(); // 검색 실행
-    e.currentTarget.blur(); // ★ 핵심: 입력창에서 포커스를 빼서 자판을 내립니다.
-  }
-};
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      searchRestaurants(); // 검색 실행
+      e.currentTarget.blur(); // ★ 핵심: 입력창에서 포커스를 빼서 자판을 내립니다.
+    }
+  };
 
 
   return (
     <div className="page-container">
       <h1 className="title text-center">🍽️ 맛집 위키</h1>
-
-      {/* [배치 1] 상단 광고: 지도 시작 전 노출 */}
-      {/* <AdSenseUnit isApp={isApp} slotId="상단_광고_ID" /> */}
 
       {/* ★ [수정됨] 둥근 캡슐형 검색창 적용 */}
       <div className="search-bar-wrapper">
@@ -168,29 +164,36 @@ const handleKeyDown = (e) => {
             </div>
           )}
 
-          {restaurants.map((r) => (
-            <div key={r.id} className="restaurant-card">
-              <Link
-                to={`/wiki/${r.id}`}
-                state={{ name: r.place_name, address: r.road_address_name, x: r.x, y: r.y }}
-                style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '18px', fontWeight: 'bold' }}>
-                    {r.place_name}
-                  </h3>
-                  <span style={{ color: '#ccc' }}>›</span>
-                </div>
-                <div className="sub-text">📍 {r.road_address_name}</div>
-                <div className="category-badge">{r.category_name || '맛집'}</div>
-              </Link>
+          {restaurants.map((r, index) => (
+            <div key={r.id}>
+              <div className="restaurant-card">
+                <Link
+                  to={`/wiki/${r.id}`}
+                  state={{ name: r.place_name, address: r.road_address_name, x: r.x, y: r.y }}
+                  style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '18px', fontWeight: 'bold' }}>
+                      {r.place_name}
+                    </h3>
+                    <span style={{ color: '#ccc' }}>›</span>
+                  </div>
+                  <div className="sub-text">📍 {r.road_address_name}</div>
+                  <div className="category-badge">{r.category_name || '맛집'}</div>
+                </Link>
+              </div>
+
+              {/* [배치 2] 리스트 중간 웹용 광고 (3번째 항목 뒤에 삽입) */}
+              {index === 2 && (
+                <AdSenseUnit isApp={isApp} slotId="8906276741" format="fluid" layoutKey="-fb+5w+4e-db+86" />
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
-      {/* <AdSenseUnit isApp={isApp} slotId="중간_광고_ID" /> */}
+      {/* [배치 1] 마지막 광고 */}
+      <AdSenseUnit isApp={isApp} slotId="4765837285" />
 
     </div>
   );

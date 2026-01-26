@@ -50,9 +50,6 @@ function RankingPage() {
             {/* <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '10px', padding:'0', color:'var(--text-sub)' }}>← 뒤로 가기</button> */}
             <h1 className="title text-center">🏆 명예의 전당</h1>
 
-            {/* [배치 1] 상단 광고: 지도 시작 전 노출 */}
-            {/* <AdSenseUnit isApp={isApp} slotId="상단_광고_ID" /> */}
-
             <div className="tab-container">
                 <button onClick={() => setActiveTab('restaurant')} className={`tab-btn ${activeTab === 'restaurant' ? 'active' : ''}`}>
                     🔥 맛집 랭킹
@@ -97,7 +94,7 @@ function RankingPage() {
             )}
 
             {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
-            {/* <AdSenseUnit isApp={isApp} slotId="중간_광고_ID" /> */}
+            <AdSenseUnit isApp={isApp} slotId="1188063662" />
 
         </div>
     );

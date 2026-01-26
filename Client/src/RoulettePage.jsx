@@ -160,9 +160,6 @@ function RoulettePage() {
       {/* <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '10px', padding: '0', color: 'var(--text-sub)' }}>← 뒤로 가기</button> */}
       <h1 className="title text-center">🎰 오늘 뭐 먹지?</h1>
 
-      {/* [배치 1] 상단 광고: 지도 시작 전 노출 */}
-      {/* <AdSenseUnit isApp={isApp} slotId="상단_광고_ID" /> */}
-
       {/* ★ 설정 패널 (Card UI 적용) */}
       <div className="wiki-editor-card" style={{ marginBottom: '30px' }}>
 
@@ -270,7 +267,7 @@ function RoulettePage() {
       )}
 
       {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
-      {/* <AdSenseUnit isApp={isApp} slotId="중간_광고_ID" /> */}
+      <AdSenseUnit isApp={isApp} slotId="6440390348" />
 
     </div>
   );

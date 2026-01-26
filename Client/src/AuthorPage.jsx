@@ -77,9 +77,6 @@ function AuthorPage({ onLogout }) {
         <div className="page-container">
             <button onClick={() => navigate(-1)} style={{ marginBottom: '15px', padding: '8px 12px', cursor: 'pointer' }}>← 뒤로</button>
 
-            {/* [배치 1] 상단 광고: 지도 시작 전 노출 */}
-            {/* <AdSenseUnit isApp={isApp} slotId="상단_광고_ID" /> */}
-
             {/* 1. 프로필 카드 (relative 설정) */}
             <div style={{
                 backgroundColor: 'white', padding: '30px', borderRadius: '15px',
@@ -222,7 +219,7 @@ function AuthorPage({ onLogout }) {
             </div>
 
             {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
-            {/* <AdSenseUnit isApp={isApp} slotId="중간_광고_ID" /> */}
+            <AdSenseUnit isApp={isApp} slotId="4528048030" />
 
         </div>
     );

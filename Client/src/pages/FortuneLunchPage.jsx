@@ -191,9 +191,6 @@ const FortuneLunchPage = () => {
         <p className="sub-text">당신의 사주를 분석해 오늘의 메뉴를 추천해 드립니다.</p>
       </div>
 
-      {/* [배치 1] 메인 입력 화면 광고 - 웹 접속자에게만 노출 */}
-      {/* <AdSenseUnit isApp={isApp} slotId="XXXXXXXXXX" /> */}
-
       {!showResult && (
         <div className="wiki-editor-card">
           {/* ... (입력 폼 코드는 기존과 동일) ... */}
@@ -232,14 +229,16 @@ const FortuneLunchPage = () => {
           <button className="btn-primary" onClick={handleStart} disabled={loading}>
             {loading ? '천기누설 중... ☁️' : (isApp ? '📺 광고 보고 결과받기' : '결과 무료 확인하기')}
           </button>
+
+          {/* [배치 2] 결과 화면 상단 광고 - 웹 접속자에게만 노출 */}
+          <AdSenseUnit isApp={isApp} slotId="3598109744" />
+
+
         </div>
       )}
 
       {showResult && (
         <div className="animate-fade-in">
-
-          {/* [배치 2] 결과 화면 상단 광고 - 웹 접속자에게만 노출 */}
-          {/* <AdSenseUnit isApp={isApp} slotId="YYYYYYYYYY" /> */}
 
           <div className="wiki-header" style={{ textAlign: 'left' }}>
             <span className="category-badge">오늘의 운세</span>
@@ -257,6 +256,19 @@ const FortuneLunchPage = () => {
             <p className="sub-text" style={{ marginTop: '10px', borderTop: '1px solid #eee', paddingTop: '10px' }}>💡 {result.reason}</p>
           </div>
 
+          {/* ▼▼▼ [추가] 인피드 광고 배치 (메뉴 카드와 지도 사이) ▼▼▼ */}
+          {/* 앱(WebView)에서는 자동으로 숨겨지고, 웹에서만 보입니다 */}
+          <div style={{ margin: '20px 0' }}>
+            <AdSenseUnit
+              isApp={isApp}
+              slotId="9655417483" // ★ 애드센스 '인피드 광고' 단위 ID 입력
+              format="fluid"      // 인피드 광고는 fluid 형식이 자연스럽습니다
+              layoutKey="-gw-3+1f-3d+2z" // (선택) 인피드 광고 생성 시 주는 키
+            />
+          </div>
+          {/* ▲▲▲ [여기까지 추가] ▲▲▲ */}
+
+          {/* 지도 영역 */}
           <div className="wiki-editor-card" style={{ padding: '0', overflow: 'hidden', height: '300px' }}>
             {myLoc.loaded ? (
               <KakaoMap center={myLoc} markers={places} onMarkerClick={handleMarkerClick} />
