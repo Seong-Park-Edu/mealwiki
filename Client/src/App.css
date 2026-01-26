@@ -534,3 +534,23 @@ input:focus, textarea:focus {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* 18. 로딩 화면 애니메이션 */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 위에서 만든 로딩 화면의 아이콘에 적용됨 */
+.spinner {
+  /* 통통 튀는 효과 */
+  animation: bounce 1.5s infinite ease-in-out;
+  
+  /* 만약 빙글빙글 돌리고 싶다면 아래 주석을 풀고 위 bounce를 지우세요 */
+  /* animation: spin 2s linear infinite; */
+}

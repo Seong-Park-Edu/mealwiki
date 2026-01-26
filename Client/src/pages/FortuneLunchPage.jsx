@@ -304,6 +304,42 @@ const FortuneLunchPage = () => {
           </div>
         </div>
       )}
+
+      {/* ▼▼▼ [추가] 로딩 오버레이 (loading이 true일 때만 화면을 덮습니다) ▼▼▼ */}
+      {loading && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)', // 배경을 하얗게 덮음
+          zIndex: 9999, // 제일 위에 뜨게 함
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          textAlign: 'center'
+        }}>
+          {/* 빙글빙글 도는 애니메이션 (CSS로 처리하거나 gif 이미지 사용 가능) */}
+          <div className="spinner" style={{ fontSize: '50px', marginBottom: '20px' }}>
+            🔮
+          </div>
+
+          <h2 style={{ color: 'var(--primary)', marginBottom: '10px' }}>
+            우주의 기운을 모으는 중...
+          </h2>
+
+          <p style={{ color: '#666', fontSize: '16px', lineHeight: '1.6' }}>
+            사주를 분석하고 맛집을 찾고 있어요.<br />
+            <strong>최대 10초</strong> 정도 걸릴 수 있습니다.<br />
+            잠시만 기다려주세요! 🙏
+          </p>
+        </div>
+      )}
+      {/* ▲▲▲ [여기까지 추가] ▲▲▲ */}
+
+
     </div>
   );
 };
