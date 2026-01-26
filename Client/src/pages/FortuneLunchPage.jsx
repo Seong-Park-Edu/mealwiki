@@ -227,7 +227,7 @@ const FortuneLunchPage = () => {
           </div>
 
           <button className="btn-primary" onClick={handleStart} disabled={loading}>
-            {loading ? '천기누설 중... ☁️' : (isApp ? '📺 광고 보고 결과받기' : '결과 무료 확인하기')}
+            {loading ? '천기누설 중... ☁️' : (isApp ? '📺 광고 보고 결과받기' : '결과 확인하기')}
           </button>
 
           {/* [배치 2] 결과 화면 상단 광고 - 웹 접속자에게만 노출 */}
@@ -314,6 +314,10 @@ const FortuneLunchPage = () => {
               🔄 다시 하기
             </button>
           </div>
+
+          {/* [배치 2] 결과 화면 하단 광고 - 웹 접속자에게만 노출 */}
+          <AdSenseUnit isApp={isApp} slotId="1766153326" />
+
         </div>
       )}
 
