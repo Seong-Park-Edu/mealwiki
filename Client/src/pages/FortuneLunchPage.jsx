@@ -33,7 +33,7 @@ const FortuneLunchPage = () => {
   const [mealType, setMealType] = useState('점심');
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
-  const [birthTime, setBirthTime] = useState('');
+  const [birthTime, setBirthTime] = useState('00:00');
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
