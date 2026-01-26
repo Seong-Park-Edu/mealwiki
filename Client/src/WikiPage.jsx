@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import AdSenseUnit from './components/AdSenseUnit';
 
 const formatDate = (dateString) => new Date(dateString).toLocaleDateString();
 const formatTime = (dateString) => new Date(dateString).toLocaleString();
@@ -21,7 +22,7 @@ function WikiPage() {
     const initialState = location.state || {};
     const [restaurantName, setRestaurantName] = useState(initialState.name || "");
     const [restaurantAddress, setRestaurantAddress] = useState(initialState.address || "");
-    
+
     // ★ 좌표 초기화 로직 개선
     const [coord, setCoord] = useState(() => {
         const x = initialState.x ? parseFloat(initialState.x) : null;
@@ -57,6 +58,16 @@ function WikiPage() {
     const [selectedContent, setSelectedContent] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isLocked, setIsLocked] = useState(false);
+
+    // 앱 접속 여부 판단
+    const [isApp, setIsApp] = useState(false);
+    useEffect(() => {
+        // 이름표(User-Agent)를 확인하여 앱 여부 판별
+        const ua = window.navigator.userAgent;
+        if (ua.indexOf('MealWikiApp') !== -1 || !!window.ReactNativeWebView) {
+            setIsApp(true);
+        }
+    }, []);
 
     const handleTemplateClick = (label) => {
         const template = `\n📌 ${label}: `;
@@ -101,7 +112,7 @@ function WikiPage() {
                 if (rName) setRestaurantName(rName);
                 const rAddr = data.Address || data.address;
                 if (rAddr) setRestaurantAddress(rAddr);
-                
+
                 // ★ 서버 데이터가 있으면 좌표 업데이트 (없으면 기존 유지)
                 const rX = data.X || data.x;
                 const rY = data.Y || data.y;
@@ -252,18 +263,18 @@ function WikiPage() {
             // coord 상태값 사용
             const centerLat = parseFloat(coord.y);
             const centerLng = parseFloat(coord.x);
-            
-            const options = { 
-                center: new window.kakao.maps.LatLng(centerLat, centerLng), 
-                level: 3 
+
+            const options = {
+                center: new window.kakao.maps.LatLng(centerLat, centerLng),
+                level: 3
             };
             const map = new window.kakao.maps.Map(mapContainer.current, options);
-            
+
             // 마커 표시
             const markerPosition = new window.kakao.maps.LatLng(centerLat, centerLng);
             const marker = new window.kakao.maps.Marker({ position: markerPosition });
             marker.setMap(map);
-            
+
             // 줌 컨트롤 추가 (선택사항)
             // const zoomControl = new window.kakao.maps.ZoomControl();
             // map.addControl(zoomControl, window.kakao.maps.ControlPosition.RIGHT);
@@ -275,7 +286,7 @@ function WikiPage() {
     return (
         <div className="page-container">
             {/* ... (기존 JSX 구조 유지) */}
-            
+
             {/* 0. 상단 이미지 갤러리 */}
             <div style={{ width: '100%', height: '250px', backgroundColor: '#f0f0f0', borderRadius: '16px', marginBottom: '20px', overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {images.length > 0 ? (
@@ -331,6 +342,9 @@ function WikiPage() {
                 </div>
             </div>
 
+            {/* [배치 1] 상단 광고: 지도 시작 전 노출 */}
+            {/* <AdSenseUnit isApp={isApp} slotId="상단_광고_ID" /> */}
+
             {/* 4. 지도 */}
             <div style={{ width: '100%', height: '250px', marginBottom: '20px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #eee' }}>
                 <div ref={mapContainer} style={{ width: '100%', height: '100%' }}></div>
@@ -369,6 +383,9 @@ function WikiPage() {
                 <textarea id="wiki-editor" className="wiki-textarea" value={content} onChange={(e) => setContent(e.target.value)} placeholder={`이 식당의 정보를 함께 채워주세요!\n\n(예시)\n🕒 영업시간: 매일 11:00 ~ 21:00\n🚗 주차: 가게 앞 2대 가능\n🍽️ 추천: 치즈 돈까스가 정말 맛있어요!`} disabled={isLocked && !isAdmin} />
             </div>
             <button onClick={handleSave} className="btn-primary" disabled={isLocked && !isAdmin} style={{ marginBottom: '40px', opacity: (isLocked && !isAdmin) ? 0.5 : 1, filter: (isLocked && !isAdmin) ? 'grayscale(1)' : 'none' }}>{isLocked && !isAdmin ? "🔒 보호된 문서입니다" : "✨ 위키 저장하기"}</button>
+
+            {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
+            {/* <AdSenseUnit isApp={isApp} slotId="중간_광고_ID" /> */}
 
             {/* 6. 댓글 영역 */}
             <div className="comment-section">

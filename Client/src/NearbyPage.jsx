@@ -2,19 +2,30 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGeolocation } from './hooks/useGeolocation';
 import KakaoMap from './components/KakaoMap';
+import AdSenseUnit from './components/AdSenseUnit';
 
 function NearbyPage() {
     const navigate = useNavigate();
-    const myLoc = useGeolocation(); 
+    const myLoc = useGeolocation();
 
     const [places, setPlaces] = useState([]);
-    const [targetLocation, setTargetLocation] = useState(null); 
+    const [targetLocation, setTargetLocation] = useState(null);
 
     const [showRoulette, setShowRoulette] = useState(false);
     const [rouletteText, setRouletteText] = useState("❓");
     const [isSpinning, setIsSpinning] = useState(false);
     const [winner, setWinner] = useState(null);
     const intervalRef = useRef(null);
+
+    // 앱 접속 여부 판단
+    const [isApp, setIsApp] = useState(false);
+    useEffect(() => {
+        // 이름표(User-Agent)를 확인하여 앱 여부 판별
+        const ua = window.navigator.userAgent;
+        if (ua.indexOf('MealWikiApp') !== -1 || !!window.ReactNativeWebView) {
+            setIsApp(true);
+        }
+    }, []);
 
     // ★ [핵심] 맛집 검색 함수 (안전하게 로드 후 실행)
     const searchPlaces = (lat, lng) => {
@@ -70,7 +81,7 @@ function NearbyPage() {
         setShowRoulette(true);
         setIsSpinning(true);
         setWinner(null);
-        setTargetLocation(null); 
+        setTargetLocation(null);
         setRouletteText("🎲");
 
         intervalRef.current = setInterval(() => {
@@ -103,6 +114,9 @@ function NearbyPage() {
         <div className="page-container">
             <h1 className="title text-center">📍 내 주변 맛집</h1>
 
+            {/* [배치 1] 상단 광고: 지도 시작 전 노출 */}
+            {/* <AdSenseUnit isApp={isApp} slotId="상단_광고_ID" /> */}
+
             <div style={{ width: '100%', height: '400px', position: 'relative' }}>
                 {!myLoc.loaded ? (
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', background: '#f0f0f0' }}>
@@ -116,7 +130,7 @@ function NearbyPage() {
                         onMapIdle={handleMapIdle}
                     />
                 )}
-                
+
                 {!showRoulette && places.length > 0 && (
                     <div style={{ position: 'absolute', bottom: '15px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'white', padding: '8px 16px', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', zIndex: 10, fontSize: '12px', fontWeight: 'bold', color: '#555', whiteSpace: 'nowrap' }}>
                         현재 검색된 식당: {places.length}개 🍽️
@@ -138,6 +152,9 @@ function NearbyPage() {
                     🎲 이 중에서 랜덤 선택!
                 </button>
             </div>
+
+            {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
+            {/* <AdSenseUnit isApp={isApp} slotId="중간_광고_ID" /> */}
 
             {showRoulette && (
                 <div style={{
@@ -180,6 +197,7 @@ function NearbyPage() {
                     </div>
                 </div>
             )}
+
         </div>
     );
 }

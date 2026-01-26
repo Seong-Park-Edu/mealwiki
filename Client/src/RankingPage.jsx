@@ -1,15 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AdSenseUnit from './components/AdSenseUnit';
 
 function RankingPage() {
     const navigate = useNavigate();
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5068';
-    
+
     const [activeTab, setActiveTab] = useState('restaurant'); // 'restaurant' | 'user'
     const [restaurantRank, setRestaurantRank] = useState([]);
     const [userRank, setUserRank] = useState([]);
     const [loading, setLoading] = useState(true);
+
+
+    // 앱 접속 여부 판단
+    const [isApp, setIsApp] = useState(false);
+    useEffect(() => {
+        // 이름표(User-Agent)를 확인하여 앱 여부 판별
+        const ua = window.navigator.userAgent;
+        if (ua.indexOf('MealWikiApp') !== -1 || !!window.ReactNativeWebView) {
+            setIsApp(true);
+        }
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -30,13 +42,16 @@ function RankingPage() {
         if (index === 0) return "🥇";
         if (index === 1) return "🥈";
         if (index === 2) return "🥉";
-        return <span style={{fontSize:'16px', color:'#888'}}>{index + 1}</span>;
+        return <span style={{ fontSize: '16px', color: '#888' }}>{index + 1}</span>;
     };
 
     return (
         <div className="page-container">
             {/* <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '10px', padding:'0', color:'var(--text-sub)' }}>← 뒤로 가기</button> */}
             <h1 className="title text-center">🏆 명예의 전당</h1>
+
+            {/* [배치 1] 상단 광고: 지도 시작 전 노출 */}
+            {/* <AdSenseUnit isApp={isApp} slotId="상단_광고_ID" /> */}
 
             <div className="tab-container">
                 <button onClick={() => setActiveTab('restaurant')} className={`tab-btn ${activeTab === 'restaurant' ? 'active' : ''}`}>
@@ -48,7 +63,7 @@ function RankingPage() {
             </div>
 
             {loading ? (
-                <div className="text-center sub-text" style={{padding:'40px'}}>집계 중... ⏳</div>
+                <div className="text-center sub-text" style={{ padding: '40px' }}>집계 중... ⏳</div>
             ) : (
                 <div className="restaurant-card" style={{ padding: '0' }}>
                     {activeTab === 'restaurant' ? (
@@ -80,6 +95,10 @@ function RankingPage() {
                     )}
                 </div>
             )}
+
+            {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
+            {/* <AdSenseUnit isApp={isApp} slotId="중간_광고_ID" /> */}
+
         </div>
     );
 }

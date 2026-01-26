@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AdSenseUnit from './components/AdSenseUnit';
 
 const formatDate = (dateString) => {
     if (!dateString) return "날짜 없음";
@@ -24,7 +25,7 @@ function AuthorPage({ onLogout }) {
     const [profile, setProfile] = useState(null);
     const [reviews, setReviews] = useState([]);
     const [acks, setAcks] = useState([]);
-    const [bookmarks, setBookmarks] = useState([]); 
+    const [bookmarks, setBookmarks] = useState([]);
     const [loading, setLoading] = useState(true);
 
     // ★ [추가] 메뉴 상태 관리 및 본인 확인
@@ -39,6 +40,17 @@ function AuthorPage({ onLogout }) {
         }
     };
 
+    // 앱 접속 여부 판단
+    const [isApp, setIsApp] = useState(false);
+    useEffect(() => {
+        // 이름표(User-Agent)를 확인하여 앱 여부 판별
+        const ua = window.navigator.userAgent;
+        if (ua.indexOf('MealWikiApp') !== -1 || !!window.ReactNativeWebView) {
+            setIsApp(true);
+        }
+    }, []);
+
+    // 프로필 정보 불러오기 
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -64,19 +76,22 @@ function AuthorPage({ onLogout }) {
     return (
         <div className="page-container">
             <button onClick={() => navigate(-1)} style={{ marginBottom: '15px', padding: '8px 12px', cursor: 'pointer' }}>← 뒤로</button>
-            
+
+            {/* [배치 1] 상단 광고: 지도 시작 전 노출 */}
+            {/* <AdSenseUnit isApp={isApp} slotId="상단_광고_ID" /> */}
+
             {/* 1. 프로필 카드 (relative 설정) */}
-            <div style={{ 
-                backgroundColor: 'white', padding: '30px', borderRadius: '15px', 
+            <div style={{
+                backgroundColor: 'white', padding: '30px', borderRadius: '15px',
                 boxShadow: '0 4px 15px rgba(0,0,0,0.05)', textAlign: 'center', marginBottom: '30px',
                 border: '1px solid #eee', position: 'relative' // ★ 메뉴 위치 기준점
             }}>
-                
+
                 {/* ★ [추가] 톱니바퀴 (내 페이지일 때만 보임) */}
                 {isMine && (
                     <div style={{ position: 'absolute', top: '15px', right: '15px' }}>
-                        <span 
-                            onClick={() => setShowMenu(!showMenu)} 
+                        <span
+                            onClick={() => setShowMenu(!showMenu)}
                             style={{ cursor: 'pointer', fontSize: '24px', userSelect: 'none' }}
                             title="설정"
                         >
@@ -92,15 +107,15 @@ function AuthorPage({ onLogout }) {
                                     backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '8px',
                                     boxShadow: '0 4px 15px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '160px', overflow: 'hidden'
                                 }}>
-                                    <div 
+                                    <div
                                         onClick={() => navigate('/change-password')}
-                                        style={{...menuItemStyle, borderBottom: '1px solid #f0f0f0'}}
+                                        style={{ ...menuItemStyle, borderBottom: '1px solid #f0f0f0' }}
                                         onMouseOver={(e) => e.target.style.backgroundColor = '#f9f9f9'}
                                         onMouseOut={(e) => e.target.style.backgroundColor = 'white'}
                                     >
                                         🔒 비밀번호 변경
                                     </div>
-                                    <div 
+                                    <div
                                         onClick={handleLogoutClick}
                                         style={{ ...menuItemStyle, color: '#F44336' }}
                                         onMouseOver={(e) => e.target.style.backgroundColor = '#f9f9f9'}
@@ -121,7 +136,7 @@ function AuthorPage({ onLogout }) {
                 <p style={{ color: '#888', fontSize: '14px' }}>
                     가입일: {formatDate(profile.createdAt || profile.CreatedAt)}
                 </p>
-                
+
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginTop: '20px' }}>
                     <div>
                         <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#2196F3' }}>{reviews.length}</div>
@@ -154,9 +169,9 @@ function AuthorPage({ onLogout }) {
                         const rDate = b.createdAt || b.CreatedAt;
                         return (
                             <div key={idx} onClick={() => navigate(`/wiki/${rId}`)}
-                                 style={{ padding: '15px', backgroundColor: '#FFF0F5', borderRadius: '12px', cursor: 'pointer', border: '1px solid #FFC1E3', transition: 'transform 0.2s' }}
-                                 onMouseOver={e => e.currentTarget.style.transform = 'translateY(-3px)'}
-                                 onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                                style={{ padding: '15px', backgroundColor: '#FFF0F5', borderRadius: '12px', cursor: 'pointer', border: '1px solid #FFC1E3', transition: 'transform 0.2s' }}
+                                onMouseOver={e => e.currentTarget.style.transform = 'translateY(-3px)'}
+                                onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
                             >
                                 <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '5px', color: '#333' }}>{rName}</div>
                                 <div style={{ fontSize: '12px', color: '#D81B60' }}>📅 {formatDate(rDate)} 찜</div>
@@ -199,12 +214,16 @@ function AuthorPage({ onLogout }) {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                 {acks.map((ack, idx) => (
                     <span key={idx} onClick={() => navigate(`/wiki/${ack.restaurantId || ack.RestaurantId}`)}
-                          style={{ padding: '8px 15px', backgroundColor: '#FFF3E0', color: '#E65100', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', border: '1px solid #FFCC80' }}
+                        style={{ padding: '8px 15px', backgroundColor: '#FFF3E0', color: '#E65100', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', border: '1px solid #FFCC80' }}
                     >
                         {ack.restaurantName || ack.RestaurantName || "이름 없음"}
                     </span>
                 ))}
             </div>
+
+            {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
+            {/* <AdSenseUnit isApp={isApp} slotId="중간_광고_ID" /> */}
+
         </div>
     );
 }

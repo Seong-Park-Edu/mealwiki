@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AdSenseUnit from './components/AdSenseUnit';
 
 // 태그 목록
 const PREDEFINED_TAGS = [
@@ -46,6 +47,18 @@ function RoulettePage() {
       );
     }
   }, []);
+
+
+  // 앱 접속 여부 판단
+  const [isApp, setIsApp] = useState(false);
+  useEffect(() => {
+    // 이름표(User-Agent)를 확인하여 앱 여부 판별
+    const ua = window.navigator.userAgent;
+    if (ua.indexOf('MealWikiApp') !== -1 || !!window.ReactNativeWebView) {
+      setIsApp(true);
+    }
+  }, []);
+
 
   const handleStart = async () => {
     // 1. 위치 입력값 검증 (내 위치 GPS가 있더라도 룰렛 페이지의 의도에 맞게 입력 유도)
@@ -146,6 +159,9 @@ function RoulettePage() {
     <div className="page-container">
       {/* <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '10px', padding: '0', color: 'var(--text-sub)' }}>← 뒤로 가기</button> */}
       <h1 className="title text-center">🎰 오늘 뭐 먹지?</h1>
+
+      {/* [배치 1] 상단 광고: 지도 시작 전 노출 */}
+      {/* <AdSenseUnit isApp={isApp} slotId="상단_광고_ID" /> */}
 
       {/* ★ 설정 패널 (Card UI 적용) */}
       <div className="wiki-editor-card" style={{ marginBottom: '30px' }}>
@@ -252,6 +268,10 @@ function RoulettePage() {
           </button>
         </div>
       )}
+
+      {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
+      {/* <AdSenseUnit isApp={isApp} slotId="중간_광고_ID" /> */}
+
     </div>
   );
 }

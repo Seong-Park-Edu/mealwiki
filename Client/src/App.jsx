@@ -11,6 +11,7 @@ import RankingPage from './RankingPage';
 import PrivacyPage from './pages/PrivacyPage';
 import FortuneLunchPage from './pages/FortuneLunchPage';
 import './App.css'; // ★ CSS 파일 임포트 필수
+import AdSenseUnit from './components/AdSenseUnit';
 
 // NavBar 컴포넌트 (CSS 클래스 적용)
 function NavBar({ isLoggedIn }) {
@@ -48,6 +49,17 @@ function SearchHome() {
   const [loading, setLoading] = useState(false);
   const [activeTag, setActiveTag] = useState(null);
 
+  // 앱 접속 여부 판단
+  const [isApp, setIsApp] = useState(false);
+  useEffect(() => {
+    // 이름표(User-Agent)를 확인하여 앱 여부 판별
+    const ua = window.navigator.userAgent;
+    if (ua.indexOf('MealWikiApp') !== -1 || !!window.ReactNativeWebView) {
+      setIsApp(true);
+    }
+  }, []);
+
+
   const PREDEFINED_TAGS = ["🍚 혼밥가능", "👩‍❤️‍👨 데이트", "🍺 회식장소", "💸 가성비갑", "😋 JMT(존맛)", "✨ 분위기맛집", "😊 친절해요", "🚗 주차가능", "🏞️ 뷰맛집", "🤫 조용해요"];
 
   useEffect(() => {
@@ -84,6 +96,9 @@ function SearchHome() {
   return (
     <div className="page-container">
       <h1 className="title text-center">🍽️ 맛집 위키</h1>
+
+      {/* [배치 1] 상단 광고: 지도 시작 전 노출 */}
+      {/* <AdSenseUnit isApp={isApp} slotId="상단_광고_ID" /> */}
 
       {/* ★ [수정됨] 둥근 캡슐형 검색창 적용 */}
       <div className="search-bar-wrapper">
@@ -147,6 +162,10 @@ function SearchHome() {
           ))}
         </div>
       )}
+
+      {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
+      {/* <AdSenseUnit isApp={isApp} slotId="중간_광고_ID" /> */}
+
     </div>
   );
 }
@@ -164,7 +183,7 @@ function App() {
   return (
     <div className="app-container">
       <NavBar isLoggedIn={isLoggedIn} />
-      
+
       {/* 메인 콘텐츠 영역 */}
       <div className="content-area" style={{ minHeight: '80vh' }}>
         <Routes>
@@ -193,11 +212,11 @@ function App() {
           MealWiki (맛집 위키)
         </div>
         <div style={{ marginBottom: '15px' }}>
-          <Link to="/privacy" style={{ 
-            fontSize: '12px', 
-            color: '#999', 
+          <Link to="/privacy" style={{
+            fontSize: '12px',
+            color: '#999',
             textDecoration: 'underline',
-            marginRight: '15px' 
+            marginRight: '15px'
           }}>
             개인정보처리방침
           </Link>

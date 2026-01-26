@@ -14,3 +14,24 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
+## 웹페이지에서 에드센스 광고 넣는 방법
+import AdSenseBanner from '../components/AdSenseBanner';
+
+function FortuneLunchPage() {
+  return (
+    <div>
+      <h1>오늘의 운세 점심 추천</h1>
+
+      {/* 광고가 들어갈 자리에 컴포넌트만 배치하면 끝! */}
+      <AdSenseBanner />
+
+      <main>
+        {/* 기존 운세 콘텐츠 로직 */}
+      </main>
+
+      <AdSenseBanner />
+    </div>
+  );
+}

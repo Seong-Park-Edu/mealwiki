@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGeolocation } from '../hooks/useGeolocation';
 import KakaoMap from '../components/KakaoMap';
+import AdSenseUnit from '../components/AdSenseUnit';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5068';
 
@@ -40,7 +41,7 @@ const FortuneLunchPage = () => {
   const [isApp, setIsApp] = useState(false);
 
   const [isAdFinished, setIsAdFinished] = useState(false);
-  
+
   // ★ [추가됨] 결과 없음 안내창을 닫았는지 체크하는 상태
   const [hideNoResult, setHideNoResult] = useState(false);
 
@@ -60,17 +61,21 @@ const FortuneLunchPage = () => {
   }, []);
 
   // 2. 앱 환경 감지 및 광고 완료 처리
+  // [수정된 2번 useEffect 부분]
   useEffect(() => {
-    if (window.ReactNativeWebView) {
+    // 1. 이름표(User-Agent)와 WebView 객체 둘 다 확인하여 더 확실하게 판별합니다.
+    const ua = window.navigator.userAgent;
+    const isAppUA = ua.indexOf('MealWikiApp') !== -1;
+    const isWebView = !!window.ReactNativeWebView;
+
+    if (isAppUA || isWebView) {
       setIsApp(true);
 
       const handleMessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-
           if (data.type === 'AD_COMPLETED') {
             setIsAdFinished(true);
-
             if (!loading && !result) {
               const savedJson = localStorage.getItem('fortune_user_data');
               if (savedJson) runAnalysis(JSON.parse(savedJson));
@@ -86,7 +91,7 @@ const FortuneLunchPage = () => {
         document.removeEventListener('message', handleMessage);
       };
     }
-  }, []);
+  }, [loading, result]); // 의존성 배열에 필요한 상태 추가
 
   // 3. 시작 버튼 클릭
   const handleStart = () => {
@@ -186,10 +191,13 @@ const FortuneLunchPage = () => {
         <p className="sub-text">당신의 사주를 분석해 오늘의 메뉴를 추천해 드립니다.</p>
       </div>
 
+      {/* [배치 1] 메인 입력 화면 광고 - 웹 접속자에게만 노출 */}
+      {/* <AdSenseUnit isApp={isApp} slotId="XXXXXXXXXX" /> */}
+
       {!showResult && (
         <div className="wiki-editor-card">
           {/* ... (입력 폼 코드는 기존과 동일) ... */}
-           <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '20px' }}>
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>이름</label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="이름을 입력하세요 (예: 홍길동)" style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }} />
           </div>
@@ -229,6 +237,10 @@ const FortuneLunchPage = () => {
 
       {showResult && (
         <div className="animate-fade-in">
+
+          {/* [배치 2] 결과 화면 상단 광고 - 웹 접속자에게만 노출 */}
+          {/* <AdSenseUnit isApp={isApp} slotId="YYYYYYYYYY" /> */}
+
           <div className="wiki-header" style={{ textAlign: 'left' }}>
             <span className="category-badge">오늘의 운세</span>
             <p style={{ marginTop: '10px', lineHeight: '1.6', color: 'var(--text-main)' }}>{result.fortune}</p>
