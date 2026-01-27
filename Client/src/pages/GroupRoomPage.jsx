@@ -187,10 +187,10 @@ function GroupRoomPage() {
           <span style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--primary)' }}>{roomCode}</span>
         </div>
         <button onClick={() => {
-          navigator.clipboard.writeText(roomCode);
-          alert("코드가 복사되었습니다!");
+          navigator.clipboard.writeText(window.location.href);
+          alert("초대 링크가 복사되었습니다!");
         }} style={{ padding: '5px 10px', fontSize: '12px', borderRadius: '10px', border: '1px solid #ddd', background: 'white' }}>
-          🔗 코드 복사
+          🔗 링크 복사
         </button>
       </div>
 
