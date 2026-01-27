@@ -75,10 +75,13 @@ const FortuneLunchPage = () => {
         try {
           const data = JSON.parse(event.data);
           if (data.type === 'AD_COMPLETED') {
-            setIsAdFinished(true);
-            if (!loading && !result) {
-              const savedJson = localStorage.getItem('fortune_user_data');
-              if (savedJson) runAnalysis(JSON.parse(savedJson));
+            console.log("앱으로부터 광고 완료 신호 수신!");
+            setIsAdFinished(true); // 광고 완료 상태 업데이트
+
+            // ★ 중요: 광고가 끝났을 때만 실제 분석 로직 실행
+            const savedData = localStorage.getItem('fortune_user_data');
+            if (savedData) {
+              runAnalysis(JSON.parse(savedData));
             }
           }
         } catch (e) { }
@@ -91,7 +94,7 @@ const FortuneLunchPage = () => {
         document.removeEventListener('message', handleMessage);
       };
     }
-  }, [loading, result]); // 의존성 배열에 필요한 상태 추가
+  }, []); // 의존성 배열을 비워 처음에 한 번만 리스너 등록
 
   // 3. 시작 버튼 클릭
   const handleStart = () => {
@@ -101,13 +104,14 @@ const FortuneLunchPage = () => {
     const userData = { name, birthDate, birthTime, gender, mealType };
     localStorage.setItem('fortune_user_data', JSON.stringify(userData));
 
-    // 분석 시작
-    runAnalysis(userData);
-
+    // ★ [수정] 바로 runAnalysis를 호출하지 않습니다.
     if (isApp) {
+      // 1) 앱 환경이면 광고 먼저 띄우라고 요청
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
     } else {
+      // 2) 일반 웹 브라우저면 바로 분석 실행
       setIsAdFinished(true);
+      runAnalysis(userData);
     }
   };
 
