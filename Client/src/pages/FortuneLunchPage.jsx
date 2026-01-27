@@ -108,6 +108,16 @@ const FortuneLunchPage = () => {
     if (isApp) {
       // 1) 앱 환경이면 광고 먼저 띄우라고 요청
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
+
+      // 3초 뒤에도 광고 신호가 안 오면 로딩을 풀어서 다시 누를 수 있게 함
+    setTimeout(() => {
+      if (!isAdFinished) {
+        setLoading(false);
+        alert("광고 준비가 늦어지고 있습니다. 잠시 후 다시 시도해주세요.");
+      }
+    }, 3000);
+
+    
     } else {
       // 2) 일반 웹 브라우저면 바로 분석 실행
       setIsAdFinished(true);
