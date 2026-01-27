@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AdSenseUnit from './components/AdSenseUnit';
+import { useGeolocation } from './hooks/useGeolocation'; // 경로에 맞춰 수정
 
 // 태그 목록
 const PREDEFINED_TAGS = [
@@ -24,6 +25,7 @@ const FOOD_CATEGORIES = [
 function RoulettePage() {
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5068';
+  const location = useGeolocation(); // 1. Hook 호출
 
   // State 관리
   const [manualLocation, setManualLocation] = useState("");
@@ -38,15 +40,50 @@ function RoulettePage() {
   const intervalRef = useRef(null);
   const [myLoc, setMyLoc] = useState(null);
 
+  const [showChoiceModal, setShowChoiceModal] = useState(false);
+  // 하단 버튼 영역에서 '리뷰 보기' 클릭 시 실행할 함수
+  const handleReviewClick = () => {
+    setShowChoiceModal(true);
+  };
+
   // 내 위치(GPS) 가져오기
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setMyLoc({ x: pos.coords.longitude, y: pos.coords.latitude }),
-        (err) => console.error(err)
-      );
+    // 1. 위치 정보 로드 완료 확인
+    if (location.loaded && location.lat && location.lng) {
+      const { lat, lng } = location;
+      setMyLoc({ x: lng, y: lat });
+
+      // 2. 카카오 API로 현재 좌표의 행정동 이름 가져오기
+      const getAddressName = async () => {
+        try {
+          // 카카오 로컬 API 호출 (좌표 -> 주소 변환)
+          const res = await axios.get(
+            `https://dapi.kakao.com/v2/local/geo/coord2regioncode.json?x=${lng}&y=${lat}`,
+            {
+              headers: {
+                Authorization: `KakaoAK ${import.meta.env.VITE_KAKAO_REST_API_KEY}`, // REST API 키 사용
+              },
+            }
+          );
+
+          if (res.data.documents && res.data.documents.length > 0) {
+            // 행정동 명칭 추출 (예: 성수2가제1동 -> 성수동 등으로 가공 가능)
+            const regionName = res.data.documents[0].address_name;
+            // '서울특별시 성동구 성수동'에서 마지막 단어만 쓰고 싶다면 아래처럼 가공
+            const splitName = regionName.split(' ');
+            const dongName = splitName[splitName.length - 1];
+
+            setManualLocation(dongName); // "성수동" 입력값 세팅
+          }
+        } catch (err) {
+          console.error("주소 변환 실패:", err);
+          setManualLocation("현위치 주변"); // 실패 시 대비책
+        }
+      };
+
+      getAddressName();
     }
-  }, []);
+  }, [location.loaded, location.lat, location.lng]);
 
 
   // 앱 접속 여부 판단
@@ -250,9 +287,7 @@ function RoulettePage() {
           <button
             className="btn-primary"
             style={{ backgroundColor: '#4CAF50', flex: 1 }}
-            onClick={() => navigate(`/wiki/${result.id}`, {
-              state: { name: result.place_name, address: result.road_address_name, x: result.x, y: result.y }
-            })}
+            onClick={handleReviewClick}
           >
             📄 리뷰 보기
           </button>
@@ -268,6 +303,68 @@ function RoulettePage() {
 
       {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
       <AdSenseUnit isApp={isApp} slotId="6440390348" />
+
+
+      {/* 선택 모달 추가 */}
+      {showChoiceModal && result && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 2000,
+          display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px'
+        }} onClick={() => setShowChoiceModal(false)}>
+
+          <div style={{
+            width: '100%', maxWidth: '320px', backgroundColor: 'white',
+            borderRadius: '20px', padding: '24px', textAlign: 'center',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)', animation: 'pop 0.3s ease'
+          }} onClick={(e) => e.stopPropagation()}>
+
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', color: '#333' }}>{result.place_name}</h3>
+            <p style={{ fontSize: '13px', color: '#777', marginBottom: '20px' }}>어디서 상세 정보를 확인하시겠어요?</p>
+
+            {/* 강조: 카카오 지도 */}
+            <button
+              onClick={() => window.open(`https://place.map.kakao.com/${result.id}`, '_blank')}
+              style={{
+                width: '100%', padding: '14px', borderRadius: '12px',
+                border: 'none', background: '#FEE500', color: '#3C1E1E',
+                fontWeight: 'bold', fontSize: '15px', marginBottom: '10px', cursor: 'pointer'
+              }}
+            >
+              💛 카카오 지도 (실시간 리뷰)
+            </button>
+
+            {/* 보조: 내 위키 */}
+            <button
+              onClick={() => navigate(`/wiki/${result.id}`, {
+                state: {
+                  name: result.place_name,
+                  address: result.road_address_name || result.address_name,
+                  x: result.x,
+                  y: result.y,
+                  ...result // 혹시 모를 나머지 데이터도 모두 포함
+                }
+              })}
+              style={{
+                width: '100%', padding: '14px', borderRadius: '12px',
+                border: '1px solid #ddd', background: '#fff', color: '#555',
+                fontWeight: '500', fontSize: '14px', marginBottom: '15px', cursor: 'pointer'
+              }}
+            >
+              📝 MealWiki 상세 정보
+            </button>
+
+            <button
+              onClick={() => setShowChoiceModal(false)}
+              style={{ background: 'none', border: 'none', color: '#999', fontSize: '13px', textDecoration: 'underline' }}
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+
+
 
     </div>
   );

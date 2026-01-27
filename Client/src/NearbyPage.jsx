@@ -10,6 +10,7 @@ function NearbyPage() {
 
     const [places, setPlaces] = useState([]);
     const [targetLocation, setTargetLocation] = useState(null);
+    const [selectedPlace, setSelectedPlace] = useState(null);
 
     const [showRoulette, setShowRoulette] = useState(false);
     const [rouletteText, setRouletteText] = useState("❓");
@@ -69,9 +70,7 @@ function NearbyPage() {
     };
 
     const handleMarkerClick = (place) => {
-        if (window.confirm(`"${place.place_name}" 상세정보 볼래?`)) {
-            navigate(`/wiki/${place.id}`, { state: { name: place.place_name, ...place } });
-        }
+        setSelectedPlace(place); // 마커를 누르면 선택된 장소 정보를 담아 모달을 띄움
     };
 
     // 룰렛 로직 (변경 없음)
@@ -135,6 +134,60 @@ function NearbyPage() {
                 )}
             </div>
 
+
+            {/* ★ 마커 클릭 시 나타나는 선택 모달 */}
+            {selectedPlace && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1000,
+                    display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px'
+                }} onClick={() => setSelectedPlace(null)}>
+
+                    <div style={{
+                        width: '100%', maxWidth: '320px', backgroundColor: 'white',
+                        borderRadius: '16px', padding: '24px', textAlign: 'center'
+                    }} onClick={(e) => e.stopPropagation()}>
+
+                        <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{selectedPlace.place_name}</h3>
+                        <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
+                            어디로 이동할까요?
+                        </p>
+
+                        {/* 1. 카카오 지도 (강조형) */}
+                        <button
+                            onClick={() => window.open(`https://place.map.kakao.com/${selectedPlace.id}`, '_blank')}
+                            style={{
+                                width: '100%', padding: '14px', borderRadius: '10px',
+                                border: 'none', background: '#FEE500', color: '#3C1E1E',
+                                fontWeight: 'bold', fontSize: '15px', marginBottom: '10px',
+                                cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}
+                        >
+                            💛 카카오 지도 리뷰 보기
+                        </button>
+
+                        {/* 2. 내 wikipost (보조형) */}
+                        <button
+                            onClick={() => navigate(`/wiki/${selectedPlace.id}`, { state: { ...selectedPlace } })}
+                            style={{
+                                width: '100%', padding: '14px', borderRadius: '10px',
+                                border: '1px solid #ddd', background: 'white', color: '#555',
+                                fontWeight: '500', fontSize: '14px', cursor: 'pointer'
+                            }}
+                        >
+                            📝 MealWiki 상세 정보
+                        </button>
+
+                        <button
+                            onClick={() => setSelectedPlace(null)}
+                            style={{ marginTop: '15px', background: 'none', border: 'none', color: '#999', fontSize: '13px', textDecoration: 'underline' }}
+                        >
+                            취소
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div style={{ marginTop: '20px', textAlign: 'center' }}>
                 <p style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>너무 많아서 못 고르겠다면?</p>
                 <button
@@ -161,33 +214,53 @@ function NearbyPage() {
                 }} onClick={closeRoulette}>
 
                     <div style={{
-                        width: '300px', backgroundColor: 'white', borderRadius: '20px', padding: '30px',
-                        textAlign: 'center', animation: 'pop 0.3s ease', position: 'relative'
+                        width: '320px', backgroundColor: 'white', borderRadius: '24px', padding: '30px',
+                        textAlign: 'center', animation: 'pop 0.3s ease', position: 'relative',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
                     }} onClick={(e) => e.stopPropagation()}>
 
-                        <div style={{ fontSize: '14px', color: '#888', marginBottom: '10px' }}>오늘의 운명은?</div>
-                        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#333', marginBottom: '20px', minHeight: '40px' }}>
+                        <div style={{ fontSize: '14px', color: '#888', marginBottom: '10px' }}>오늘의 운명적인 맛집은?</div>
+                        <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#333', marginBottom: '8px', minHeight: '40px' }}>
                             {rouletteText}
                         </div>
 
                         {winner && (
                             <>
-                                <div style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
+                                <div style={{ fontSize: '13px', color: '#666', marginBottom: '25px' }}>
                                     {winner.road_address_name || winner.address_name}
                                 </div>
+
+                                {/* 강조된 버튼: 카카오 지도 */}
+                                <button
+                                    onClick={() => window.open(`https://place.map.kakao.com/${winner.id}`, '_blank')}
+                                    style={{
+                                        width: '100%', padding: '14px', borderRadius: '12px',
+                                        border: 'none', background: '#FEE500', color: '#3C1E1E',
+                                        fontWeight: 'bold', fontSize: '15px', marginBottom: '10px',
+                                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                                    }}
+                                >
+                                    💛 카카오 지도 리뷰 보기
+                                </button>
+
+                                {/* 보조 버튼: MealWiki 상세정보 */}
                                 <button
                                     onClick={() => navigate(`/wiki/${winner.id}`, { state: { name: winner.place_name, ...winner } })}
-                                    className="btn-primary"
-                                    style={{ width: '100%', marginBottom: '10px' }}
+                                    style={{
+                                        width: '100%', padding: '12px', borderRadius: '12px',
+                                        border: '1px solid #eee', background: '#f9f9f9', color: '#666',
+                                        fontWeight: '500', fontSize: '14px', marginBottom: '15px',
+                                        cursor: 'pointer'
+                                    }}
                                 >
-                                    상세 정보 보기 👉
+                                    📝 MealWiki 상세 정보
                                 </button>
                             </>
                         )}
 
                         <button
                             onClick={closeRoulette}
-                            style={{ background: 'none', border: 'none', color: '#999', textDecoration: 'underline', cursor: 'pointer', fontSize: '13px' }}
+                            style={{ background: 'none', border: 'none', color: '#bbb', textDecoration: 'underline', cursor: 'pointer', fontSize: '13px' }}
                         >
                             닫기
                         </button>
