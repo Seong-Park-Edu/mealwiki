@@ -60,10 +60,7 @@ const FortuneLunchPage = () => {
     }
   }, []);
 
-  // 2. 앱 환경 감지 및 광고 완료 처리
-  // [수정된 2번 useEffect 부분]
   useEffect(() => {
-    // 1. 이름표(User-Agent)와 WebView 객체 둘 다 확인하여 더 확실하게 판별합니다.
     const ua = window.navigator.userAgent;
     const isAppUA = ua.indexOf('MealWikiApp') !== -1;
     const isWebView = !!window.ReactNativeWebView;
@@ -73,46 +70,54 @@ const FortuneLunchPage = () => {
 
       const handleMessage = (event) => {
         try {
-          const data = JSON.parse(event.data);
+          // 이벤트 데이터가 문자열인 경우와 객체인 경우 모두 대응
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+
           if (data.type === 'AD_COMPLETED') {
+            console.log("신호 수신: 광고 완료");
             setIsAdFinished(true);
-            if (!loading && !result) {
-              const savedJson = localStorage.getItem('fortune_user_data');
-              if (savedJson) runAnalysis(JSON.parse(savedJson));
+
+            // [수정] 복잡한 조건 없이 신호 오면 바로 실행
+            const savedJson = localStorage.getItem('fortune_user_data');
+            if (savedJson) {
+              const parsedData = JSON.parse(savedJson);
+              // 분석 함수 실행 (loading 상태 등은 runAnalysis 안에서 제어하므로 무관)
+              runAnalysis(parsedData);
             }
           }
-        } catch (e) { }
+        } catch (e) {
+          console.error("메시지 파싱 에러:", e);
+        }
       };
 
+      // 안드로이드와 iOS 모두 대응하기 위해 window와 document 모두 등록
       window.addEventListener('message', handleMessage);
       document.addEventListener('message', handleMessage);
+
       return () => {
         window.removeEventListener('message', handleMessage);
         document.removeEventListener('message', handleMessage);
       };
     }
-  }, [loading, result]); // 의존성 배열에 필요한 상태 추가
+  }, []);
 
   // 3. 시작 버튼 클릭
   const handleStart = () => {
     if (!name.trim()) return alert("이름을 입력해주세요!");
     if (!birthDate || !birthTime) return alert("생년월일과 시간을 모두 입력해주세요!");
 
+    // 데이터 저장
     const userData = { name, birthDate, birthTime, gender, mealType };
     localStorage.setItem('fortune_user_data', JSON.stringify(userData));
 
+    // 로딩 시작 (화면에 '기운 모으는 중' 표시)
+    setLoading(true);
+
     if (isApp) {
-      // [STEP 1] 일단 로딩 오버레이(우주의 기운을 모으는 중...)를 즉시 띄웁니다.
-      // 이렇게 해야 사용자가 "아, 작동 중이구나"라고 느낍니다.
-      setLoading(true);
-
-      // [STEP 2] 앱에 광고를 보여달라고 신호를 보냅니다.
+      // 앱에 광고 요청 (이후 앱의 응답을 useEffect에서 기다림)
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
-
-      // 참고: runAnalysis는 여기서 실행하지 않습니다. 
-      // 오직 앱으로부터 AD_COMPLETED 메시지를 받았을 때만 실행됩니다. (useEffect 로직)
     } else {
-      setLoading(true);
+      // 일반 웹이면 광고 없이 바로 분석
       setIsAdFinished(true);
       runAnalysis(userData);
     }
