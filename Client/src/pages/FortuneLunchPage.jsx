@@ -104,20 +104,26 @@ const FortuneLunchPage = () => {
     const userData = { name, birthDate, birthTime, gender, mealType };
     localStorage.setItem('fortune_user_data', JSON.stringify(userData));
 
+    // 1. 먼저 로딩 상태를 true로 만들어 버튼을 '분석 중...'으로 바꿉니다.
+    setLoading(true);
+
     // ★ [수정] 바로 runAnalysis를 호출하지 않습니다.
     if (isApp) {
-      // 1) 앱 환경이면 광고 먼저 띄우라고 요청
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
+      // 2. [핵심] 바로 광고를 요청하지 않고, 2~3초 정도 "우주의 기운을 모으는" 시간을 벌어줍니다.
+      // 이 시간 동안 앱은 백그라운드에서 광고 로딩을 완료할 가능성이 매우 높아집니다.
+      setTimeout(() => {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
 
-      // 3초 뒤에도 광고 신호가 안 오면 로딩을 풀어서 다시 누를 수 있게 함
-    setTimeout(() => {
-      if (!isAdFinished) {
-        setLoading(false);
-        alert("광고 준비가 늦어지고 있습니다. 잠시 후 다시 시도해주세요.");
-      }
-    }, 3000);
+        // 3. 만약 5초가 지났는데도 아무 반응이 없다면 사용자가 다시 시도할 수 있게 로딩을 풀어줍니다.
+        setTimeout(() => {
+          if (!isAdFinished) {
+            setLoading(false);
+            // 이때는 "광고 로딩이 지연되고 있습니다. 다시 한번 눌러주세요." 정도의 알림을 줄 수 있습니다.
+          }
+        }, 5000);
+      }, 3000);
 
-    
+
     } else {
       // 2) 일반 웹 브라우저면 바로 분석 실행
       setIsAdFinished(true);
