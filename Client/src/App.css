@@ -102,13 +102,28 @@ button:active {
 }
 
 .btn-primary {
-  background-color: var(--primary);
+  background: linear-gradient(135deg, #FF9800, #F44336); /* 그라데이션 추가 */
   color: white;
-  padding: 12px 20px;
-  border-radius: 12px;
+  padding: 16px 20px; /* 조금 더 도톰하게 */
+  border-radius: 16px; /* 더 둥글게 */
+  border: none;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 16px;
   width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease; /* 애니메이션 효과 */
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3); /* 은은한 주황색 그림자 */
+}
+
+.btn-primary:active {
+  transform: scale(0.97); /* 눌렀을 때 살짝 작아지는 효과 */
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+}
+
+.btn-primary:disabled {
+  background: #ccc;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 .btn-search {
@@ -235,18 +250,17 @@ input:focus, textarea:focus {
 }
 
 .btn-action {
-  flex: 1;
-  padding: 12px;
-  border-radius: 12px;
-  font-weight: bold;
-  border: 1px solid #eee;
-  background: white;
-  color: var(--text-main);
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
+  background: linear-gradient(135deg, #FF9800, #F44336); /* 그라데이션 추가 */
+  color: white;
+  padding: 16px 20px; /* 조금 더 도톰하게 */
+  border-radius: 16px; /* 더 둥글게 */
+  border: none;
+  font-weight: 700;
+  font-size: 16px;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease; /* 애니메이션 효과 */
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3); /* 은은한 주황색 그림자 */
 }
 
 .btn-action.active {
@@ -506,20 +520,36 @@ input:focus, textarea:focus {
   border-color: #FFE0B2;
 }
 
-.wiki-textarea {
-  width: 100%; /* 수정: 95%에서 100%로 변경 (박스 사이징 때문에 꽉 채워도 됨) */
-  border: none;
-  resize: none;
-  outline: none;
+/* 입력창 통합 스타일 */
+.wiki-textarea, 
+input[type="text"], 
+input[type="date"], 
+input[type="time"] {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #eee; /* 아주 연한 테두리 */
+  border-radius: 14px;    /* 버튼과 맞춘 둥근 모서리 */
+  background-color: #f8f8f8; /* 살짝 회색빛 배경 */
   font-size: 15px;
-  line-height: 1.6;
   color: #333;
-  background: transparent;
-  min-height: 150px;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box; /* 패딩이 너비에 영향을 주지 않도록 설정 */
 }
 
-.wiki-textarea::placeholder {
-  color: #ccc;
+/* 입력창 클릭(포커스) 시 효과 */
+.wiki-textarea:focus, 
+input[type="text"]:focus, 
+input[type="date"]:focus, 
+input[type="time"]:focus {
+  background-color: #fff; /* 배경은 하얗게 */
+  border-color: #FF9800;  /* 포인트 컬러로 테두리 강조 */
+  box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1); /* 은은한 후광 효과 */
+}
+
+/* placeholder(미리보기 글자) 색상 */
+::placeholder {
+  color: #bbb;
 }
 
 /* 17. 모든 페이지 공통 컨테이너 */
@@ -553,4 +583,40 @@ input:focus, textarea:focus {
   
   /* 만약 빙글빙글 돌리고 싶다면 아래 주석을 풀고 위 bounce를 지우세요 */
   /* animation: spin 2s linear infinite; */
+}
+
+/* 19. DatePicker 커스텀 스타일 */
+/* DatePicker 입력창을 우리 디자인과 통일 */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.custom-datepicker {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  background-color: #f8f8f8;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.custom-datepicker:focus {
+  background-color: #fff;
+  border-color: #FF9800;
+  box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
+}
+
+/* 시간 선택 리스트 높이 및 스타일 조절 */
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item--selected {
+  background-color: var(--primary) !important;
+}
+
+.react-datepicker__time-container {
+  width: 100px !important;
+}
+
+.react-datepicker--time-only .react-datepicker__time-container {
+  width: 100% !important;
 }

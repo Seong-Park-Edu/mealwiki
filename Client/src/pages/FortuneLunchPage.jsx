@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useGeolocation } from '../hooks/useGeolocation';
 import KakaoMap from '../components/KakaoMap';
 import AdSenseUnit from '../components/AdSenseUnit';
+import DatePicker, { registerLocale } from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import ko from "date-fns/locale/ko";
+registerLocale("ko", ko);
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5068';
 
@@ -110,14 +114,14 @@ const FortuneLunchPage = () => {
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
 
       // 3초 뒤에도 광고 신호가 안 오면 로딩을 풀어서 다시 누를 수 있게 함
-    setTimeout(() => {
-      if (!isAdFinished) {
-        setLoading(false);
-        alert("광고 준비가 늦어지고 있습니다. 잠시 후 다시 시도해주세요.");
-      }
-    }, 3000);
+      setTimeout(() => {
+        if (!isAdFinished) {
+          setLoading(false);
+          alert("광고 준비가 늦어지고 있습니다. 잠시 후 다시 시도해주세요.");
+        }
+      }, 3000);
 
-    
+
     } else {
       // 2) 일반 웹 브라우저면 바로 분석 실행
       setIsAdFinished(true);
@@ -207,37 +211,128 @@ const FortuneLunchPage = () => {
 
       {!showResult && (
         <div className="wiki-editor-card">
+
+          <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>식사 유형</label>
+          <div style={{
+            display: 'flex', background: '#f0f0f0', padding: '5px', borderRadius: '15px', gap: '5px'
+          }}>
+            {['아침', '점심', '저녁'].map((type) => (
+              <button
+                key={type}
+                onClick={() => setMealType(type)}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: '12px', border: 'none',
+                  transition: 'all 0.3s',
+                  background: mealType === type ? '#fff' : 'transparent',
+                  color: mealType === type ? 'var(--primary)' : '#777',
+                  fontWeight: mealType === type ? 'bold' : '500',
+                  boxShadow: mealType === type ? '0 2px 8px rgba(0,0,0,0.1)' : 'none'
+                }}
+              >
+                {type === '아침' ? '🌅 아침' : type === '점심' ? '☀️ 점심' : '🌙 저녁'}
+              </button>
+            ))}
+          </div>
+
+          <p> </p>
+
           {/* ... (입력 폼 코드는 기존과 동일) ... */}
           <div style={{ marginBottom: '20px' }}>
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>이름</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="이름을 입력하세요 (예: 홍길동)" style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }} />
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="이름을 입력하세요"
+              className="wiki-textarea" // CSS 클래스 적용
+            />
           </div>
 
           <div style={{ marginBottom: '20px' }}>
             <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>성별</label>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setGender('male')} className={`btn ${gender === 'male' ? 'btn-primary' : ''}`} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', background: gender === 'male' ? 'var(--primary)' : '#fff', color: gender === 'male' ? '#fff' : '#333' }}>남성 ‍♂️</button>
-              <button onClick={() => setGender('female')} className={`btn ${gender === 'female' ? 'btn-primary' : ''}`} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', background: gender === 'female' ? 'var(--primary)' : '#fff', color: gender === 'female' ? '#fff' : '#333' }}>여성 ‍♀️</button>
+            {/* 성별 선택 영역 수정 */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setGender('male')}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: '15px', border: 'none',
+                  transition: 'all 0.2s ease',
+                  background: gender === 'male' ? 'linear-gradient(135deg, #64B5F6, #2196F3)' : '#f0f0f0',
+                  color: gender === 'male' ? '#fff' : '#888',
+                  fontWeight: 'bold',
+                  boxShadow: gender === 'male' ? '0 4px 10px rgba(33, 150, 243, 0.3)' : 'none',
+                  transform: gender === 'male' ? 'scale(1.02)' : 'scale(1)'
+                }}
+              >
+                남성 ♂️
+              </button>
+              <button
+                onClick={() => setGender('female')}
+                style={{
+                  flex: 1, padding: '12px', borderRadius: '15px', border: 'none',
+                  transition: 'all 0.2s ease',
+                  background: gender === 'female' ? 'linear-gradient(135deg, #F06292, #E91E63)' : '#f0f0f0',
+                  color: gender === 'female' ? '#fff' : '#888',
+                  fontWeight: 'bold',
+                  boxShadow: gender === 'female' ? '0 4px 10px rgba(233, 30, 99, 0.3)' : 'none',
+                  transform: gender === 'female' ? 'scale(1.02)' : 'scale(1)'
+                }}
+              >
+                여성 ♀️
+              </button>
             </div>
           </div>
 
+          {/* 생년월일 입력창 */}
           <div style={{ marginBottom: '20px' }}>
-            <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>어떤 식사를 추천받을까요?</label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {['아침', '점심', '저녁'].map((type) => (
-                <button key={type} onClick={() => setMealType(type)} className={`btn`} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd', background: mealType === type ? 'var(--primary)' : '#fff', color: mealType === type ? '#fff' : '#333', fontWeight: mealType === type ? 'bold' : 'normal' }}>{type === '아침' ? '🌅 아침' : type === '점심' ? '☀️ 점심' : '🌙 저녁'}</button>
-              ))}
-            </div>
+            <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>
+              생년월일
+            </label>
+            <DatePicker
+              selected={birthDate ? new Date(birthDate) : null}
+              onChange={(date) => {
+                // yyyy-MM-dd 형식으로 변환하여 저장
+                const d = date.toISOString().split('T')[0];
+                setBirthDate(d);
+              }}
+              dateFormat="yyyy년 MM월 dd일"
+              locale="ko"
+              placeholderText="날짜를 선택하세요"
+              className="custom-datepicker"
+
+              // ★ 핵심: 연도/월 선택을 드롭다운으로 변경
+              showYearDropdown
+              showMonthDropdown
+              dropdownMode="select"
+              yearDropdownItemNumber={100} // 표시할 연도 범위
+              maxDate={new Date()} // 오늘 이후 날짜 선택 방지
+            />
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>생년월일</label>
-            <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }} />
-          </div>
-
+          {/* 태어난 시간 입력창 */}
           <div style={{ marginBottom: '30px' }}>
-            <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>태어난 시간</label>
-            <input type="time" value={birthTime} onChange={(e) => setBirthTime(e.target.value)} style={{ width: '100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', background: '#FAFAFA' }} />
+            <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>
+              태어난 시간
+            </label>
+            <DatePicker
+              selected={birthTime ? new Date(`2000-01-01T${birthTime}`) : null}
+              onChange={(date) => {
+                if (date) {
+                  // HH:mm 형식으로 추출 (예: 14:30)
+                  const hours = String(date.getHours()).padStart(2, '0');
+                  const minutes = String(date.getMinutes()).padStart(2, '0');
+                  setBirthTime(`${hours}:${minutes}`);
+                }
+              }}
+              showTimeSelect
+              showTimeSelectOnly
+              timeIntervals={1} // 1분 단위로 선택 (필요시 15분 등으로 조절 가능)
+              timeCaption="시간"
+              dateFormat="aa h:mm" // 오전/오후 1:30 형식으로 표시
+              locale="ko"
+              placeholderText="시간을 선택하세요"
+              className="custom-datepicker" // 앞서 만든 CSS 클래스 재사용
+            />
           </div>
 
           <button className="btn-primary" onClick={handleStart} disabled={loading}>

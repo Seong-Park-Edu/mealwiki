@@ -222,6 +222,52 @@ function NearbyPage() {
                 </button>
             </div>
 
+
+            {/* ▼▼▼ [추가된 코드] 검색 결과 리스트 (App.jsx 스타일 적용) ▼▼▼ */}
+            <div style={{ marginTop: '30px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px', paddingLeft: '5px' }}>
+                    📋 주변 식당 목록 ({places.length})
+                </h2>
+
+                {places.map((place, index) => (
+                    <div key={place.id}>
+                        {/* App.jsx와 동일한 클래스(restaurant-card) 사용 */}
+                        <div
+                            className="restaurant-card"
+                            onClick={() => handleMarkerClick(place)} // 클릭 시 모달 띄우기 재사용
+                            style={{ cursor: 'pointer' }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <h3 style={{ margin: '0 0 5px 0', fontSize: '18px', fontWeight: 'bold' }}>
+                                    {place.place_name}
+                                </h3>
+                                <span style={{ color: '#ccc' }}>›</span>
+                            </div>
+                            <div className="sub-text">📍 {place.road_address_name || place.address_name}</div>
+                            {/* 카테고리 정보가 길 경우를 대비해 마지막 단어만 보여주거나 그대로 출력 */}
+                            <div className="category-badge">
+                                {place.category_name ? place.category_name.split('>').pop().trim() : '맛집'}
+                            </div>
+                        </div>
+
+                        {/* 리스트 사이사이 광고 (App.jsx 로직과 동일) */}
+                        {(index + 1) % 5 === 0 && (
+                            <div style={{ margin: '20px 0' }}>
+                                <AdSenseUnit
+                                    isApp={isApp}
+                                    slotId="8906276741"
+                                    format="fluid"
+                                    layoutKey="-fb+5w+4e-db+86"
+                                />
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+            {/* ▲▲▲ [여기까지 추가] ▲▲▲ */}
+
+
+
             {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
             <AdSenseUnit isApp={isApp} slotId="1571207047" />
 

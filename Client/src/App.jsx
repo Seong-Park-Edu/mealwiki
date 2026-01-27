@@ -49,6 +49,8 @@ function SearchHome() {
   const [loading, setLoading] = useState(false);
   const [activeTag, setActiveTag] = useState(null);
   const [isApp, setIsApp] = useState(false); // 앱 접속 여부 판단
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null); // ★ 추가: 선택된 식당 정보를 관리할 상태
+  const navigate = useNavigate(); // Link 대신 navigate를 사용하기 위해 필요
 
   useEffect(() => {
     // 이름표(User-Agent)를 확인하여 앱 여부 판별
@@ -166,21 +168,20 @@ function SearchHome() {
 
           {restaurants.map((r, index) => (
             <div key={r.id}>
-              <div className="restaurant-card">
-                <Link
-                  to={`/wiki/${r.id}`}
-                  state={{ name: r.place_name, address: r.road_address_name, x: r.x, y: r.y }}
-                  style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <h3 style={{ margin: '0 0 5px 0', fontSize: '18px', fontWeight: 'bold' }}>
-                      {r.place_name}
-                    </h3>
-                    <span style={{ color: '#ccc' }}>›</span>
-                  </div>
-                  <div className="sub-text">📍 {r.road_address_name}</div>
-                  <div className="category-badge">{r.category_name || '맛집'}</div>
-                </Link>
+              <div
+                className="restaurant-card"
+                onClick={() => setSelectedRestaurant(r)} // ★ 클릭 시 모달 오픈을 위해 데이터 저장
+                style={{ cursor: 'pointer' }}
+              >
+                {/* 기존 Link 태그는 삭제하고 내부 내용만 유지 */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <h3 style={{ margin: '0 0 5px 0', fontSize: '18px', fontWeight: 'bold' }}>
+                    {r.place_name}
+                  </h3>
+                  <span style={{ color: '#ccc' }}>›</span>
+                </div>
+                <div className="sub-text">📍 {r.road_address_name || r.address_name}</div>
+                <div className="category-badge">{r.category_name || '맛집'}</div>
               </div>
 
               {/* [수정된 로직] 
@@ -197,11 +198,76 @@ function SearchHome() {
                   />
                 </div>
               )}
-
             </div>
           ))}
         </div>
       )}
+
+
+
+      {/* ★ 선택 모달 UI 추가 */}
+      {selectedRestaurant && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1000,
+          display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px'
+        }} onClick={() => setSelectedRestaurant(null)}>
+
+          <div style={{
+            width: '100%', maxWidth: '320px', backgroundColor: 'white',
+            borderRadius: '16px', padding: '24px', textAlign: 'center',
+            animation: 'pop 0.3s ease'
+          }} onClick={(e) => e.stopPropagation()}>
+
+            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{selectedRestaurant.place_name}</h3>
+            <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
+              어디로 이동할까요?
+            </p>
+
+            {/* 1. 카카오 지도 (강조형) */}
+            <button
+              onClick={() => window.open(`https://place.map.kakao.com/${selectedRestaurant.id}`, '_blank')}
+              style={{
+                width: '100%', padding: '14px', borderRadius: '10px',
+                border: 'none', background: '#FEE500', color: '#3C1E1E',
+                fontWeight: 'bold', fontSize: '15px', marginBottom: '10px',
+                cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+            >
+              💛 카카오 지도 리뷰 보기
+            </button>
+
+            {/* 2. 내 wikipost (보조형) */}
+            <button
+              onClick={() => navigate(`/wiki/${selectedRestaurant.id}`, {
+                state: {
+                  name: selectedRestaurant.place_name,
+                  address: selectedRestaurant.road_address_name || selectedRestaurant.address_name,
+                  x: selectedRestaurant.x,
+                  y: selectedRestaurant.y,
+                  ...selectedRestaurant
+                }
+              })}
+              style={{
+                width: '100%', padding: '14px', borderRadius: '10px',
+                border: '1px solid #ddd', background: 'white', color: '#555',
+                fontWeight: '500', fontSize: '14px', cursor: 'pointer'
+              }}
+            >
+              📝 MealWiki 상세 정보
+            </button>
+
+            <button
+              onClick={() => setSelectedRestaurant(null)}
+              style={{ marginTop: '15px', background: 'none', border: 'none', color: '#999', fontSize: '13px', textDecoration: 'underline' }}
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+
+
 
       {/* [배치 1] 마지막 광고 */}
       <AdSenseUnit isApp={isApp} slotId="4765837285" />
