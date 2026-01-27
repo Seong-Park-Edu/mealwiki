@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGeolocation } from './hooks/useGeolocation';
 import KakaoMap from './components/KakaoMap';
 import AdSenseUnit from './components/AdSenseUnit';
+import axios from 'axios'
 
 function NearbyPage() {
     const navigate = useNavigate();
@@ -88,10 +89,28 @@ function NearbyPage() {
             setRouletteText(places[randomIdx].place_name);
         }, 50);
 
-        setTimeout(() => {
+        setTimeout(async () => {
             clearInterval(intervalRef.current);
             const finalIdx = Math.floor(Math.random() * places.length);
             const selectedPlace = places[finalIdx];
+
+            // ★ [수정] 백엔드 DTO 구조에 맞게 객체 형태로 전송
+            try {
+                const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5068';
+                await axios.post(
+                    `${serverUrl}/api/Recommend/log`,
+                    {
+                        restaurantId: selectedPlace.id,
+                        name: selectedPlace.place_name,
+                        address: selectedPlace.road_address_name || selectedPlace.address_name,
+                        x: selectedPlace.x,
+                        y: selectedPlace.y
+                    },
+                    { headers: { 'Content-Type': 'application/json' } }
+                );
+            } catch (e) {
+                console.error("추천 로그 기록 실패", e);
+            }
 
             setWinner(selectedPlace);
             setRouletteText(selectedPlace.place_name);

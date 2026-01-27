@@ -174,10 +174,25 @@ function RoulettePage() {
       }, 50);
 
       // 4. 결과 발표
-      setTimeout(() => {
+      setTimeout(async () => {
         clearInterval(intervalRef.current);
         const finalIdx = Math.floor(Math.random() * candidates.length);
         const winner = candidates[finalIdx];
+
+        // ★ [추가] 추천 로그 서버 전송
+        // ★ 추천 로그 서버 전송
+        try {
+          await axios.post(`${apiUrl}/api/Recommend/log`, {
+            restaurantId: winner.id,
+            name: winner.place_name,
+            address: winner.road_address_name || winner.address_name,
+            x: winner.x,
+            y: winner.y
+          });
+        } catch (e) {
+          console.error("추천 로그 기록 실패", e);
+        }
+
         setResult(winner);
         setDisplayContent(winner.place_name);
         setIsSpinning(false);
