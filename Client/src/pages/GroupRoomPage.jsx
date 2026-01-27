@@ -199,6 +199,7 @@ function GroupRoomPage() {
       </h1>
 
       {/* 메뉴 리스트 */}
+      {/* 메뉴 리스트 */}
       <div className="menu-list" ref={scrollRef}>
         {menus.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: '#ccc' }}>
@@ -206,20 +207,31 @@ function GroupRoomPage() {
             아직 메뉴가 없어요.<br />첫 번째 메뉴를 등록해주세요!
           </div>
         ) : (
-          menus.map((m) => (
-            <div key={m.id} className="restaurant-card animate-pop" style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px' }}>
-              <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{m.menu_name}</span>
-              <span style={{ fontSize: '12px', color: '#999', background: '#f5f5f5', padding: '4px 8px', borderRadius: '8px' }}>
-                {m.user_name}
-              </span>
-            </div>
+          menus.map((m, index) => (
+            <React.Fragment key={m.id}>
+              {/* 메뉴 아이템 */}
+              <div className="restaurant-card animate-pop" style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px' }}>
+                <span style={{ fontSize: '16px', fontWeight: 'bold' }}>{m.menu_name}</span>
+                <span style={{ fontSize: '12px', color: '#999', background: '#f5f5f5', padding: '4px 8px', borderRadius: '8px' }}>
+                  {m.user_name}
+                </span>
+              </div>
+
+              {/* ★ 인피드 광고 삽입 로직 (3번째 마다) ★ */}
+              {/* index는 0부터 시작하므로 +1을 해줍니다. (3, 6, 9... 번째) */}
+              {(index + 1) % 3 === 0 && (
+                <div style={{ margin: '20px 0' }}>
+                  <AdSenseUnit isApp={isApp} slotId="6543685329" format="fluid" layoutKey="-fb+5w+4e-db+86" />
+                </div>
+              )}
+            </React.Fragment>
           ))
         )}
       </div>
 
       {/* 광고 영역 */}
       <div style={{ marginTop: '20px' }}>
-        <AdSenseUnit isApp={isApp} slotId="1571207047" />
+        <AdSenseUnit isApp={isApp} slotId="8471010510" />
       </div>
 
       {/* 하단 입력창 */}
