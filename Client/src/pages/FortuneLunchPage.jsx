@@ -101,13 +101,20 @@ const FortuneLunchPage = () => {
     const userData = { name, birthDate, birthTime, gender, mealType };
     localStorage.setItem('fortune_user_data', JSON.stringify(userData));
 
-    // 분석 시작
-    runAnalysis(userData);
-
     if (isApp) {
+      // [STEP 1] 일단 로딩 오버레이(우주의 기운을 모으는 중...)를 즉시 띄웁니다.
+      // 이렇게 해야 사용자가 "아, 작동 중이구나"라고 느낍니다.
+      setLoading(true);
+
+      // [STEP 2] 앱에 광고를 보여달라고 신호를 보냅니다.
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
+
+      // 참고: runAnalysis는 여기서 실행하지 않습니다. 
+      // 오직 앱으로부터 AD_COMPLETED 메시지를 받았을 때만 실행됩니다. (useEffect 로직)
     } else {
+      setLoading(true);
       setIsAdFinished(true);
+      runAnalysis(userData);
     }
   };
 
