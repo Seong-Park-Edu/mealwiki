@@ -104,28 +104,34 @@ const FortuneLunchPage = () => {
     const userData = { name, birthDate, birthTime, gender, mealType };
     localStorage.setItem('fortune_user_data', JSON.stringify(userData));
 
-    // 1. 먼저 로딩 상태를 true로 만들어 버튼을 '분석 중...'으로 바꿉니다.
-    setLoading(true);
-
-    // ★ [수정] 바로 runAnalysis를 호출하지 않습니다.
     if (isApp) {
-      // 2. [핵심] 바로 광고를 요청하지 않고, 2~3초 정도 "우주의 기운을 모으는" 시간을 벌어줍니다.
-      // 이 시간 동안 앱은 백그라운드에서 광고 로딩을 완료할 가능성이 매우 높아집니다.
+      // [변경] 버튼을 누르자마자 로딩창을 띄우지 않고, 버튼 텍스트 등을 통해 '준비 중'임을 알립니다.
+      // 만약 버튼에 직접 "준비 중..."을 띄우고 싶다면 별도의 'isPreparing' 상태를 쓰셔도 좋지만,
+      // 일단 UI가 바로 변하지 않게 하려면 여기서 setLoading(true)를 하지 않습니다.
+
+      console.log("3초 대기 시작... 광고 로딩 시간을 법니다.");
+
+      // 3초 뒤에 실행될 로직
       setTimeout(() => {
+        // 1) 3초 뒤에 드디어 로딩 화면(회색/하얀 오버레이)을 띄웁니다.
+        setLoading(true);
+
+        // 2) 동시에 앱에 광고 송출 요청을 보냅니다.
         window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
 
-        // 3. 만약 5초가 지났는데도 아무 반응이 없다면 사용자가 다시 시도할 수 있게 로딩을 풀어줍니다.
+        // 3) 혹시 광고가 계속 안 나올 경우를 대비한 안전장치 (광고 요청 후 5초 뒤)
         setTimeout(() => {
           if (!isAdFinished) {
             setLoading(false);
-            // 이때는 "광고 로딩이 지연되고 있습니다. 다시 한번 눌러주세요." 정도의 알림을 줄 수 있습니다.
+            alert("광고 준비가 늦어지고 있습니다. 잠시 후 다시 시도해주세요.");
           }
         }, 5000);
-      }, 3000);
 
+      }, 3000); // 정확히 3초 대기
 
     } else {
-      // 2) 일반 웹 브라우저면 바로 분석 실행
+      // 일반 웹 브라우저는 지연 없이 바로 실행
+      setLoading(true);
       setIsAdFinished(true);
       runAnalysis(userData);
     }
