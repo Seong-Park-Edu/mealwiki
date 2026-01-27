@@ -205,7 +205,7 @@ function RoulettePage() {
           <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#555', marginBottom: '8px' }}>📍 위치</p>
           <input
             className="wiki-textarea" // 스타일 재활용 (배경 투명 등)
-            style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '10px', height: 'auto', minHeight: 'auto', width: '96%' }}
+            style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '10px', height: 'auto', minHeight: 'auto', width: '96%', textAlign: "center" }}
             type="text"
             placeholder="예: 강남역, 홍대, 부산역"
             value={manualLocation}
