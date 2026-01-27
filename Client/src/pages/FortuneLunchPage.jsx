@@ -60,7 +60,10 @@ const FortuneLunchPage = () => {
     }
   }, []);
 
+  // 2. 앱 환경 감지 및 광고 완료 처리
+  // [수정된 2번 useEffect 부분]
   useEffect(() => {
+    // 1. 이름표(User-Agent)와 WebView 객체 둘 다 확인하여 더 확실하게 판별합니다.
     const ua = window.navigator.userAgent;
     const isAppUA = ua.indexOf('MealWikiApp') !== -1;
     const isWebView = !!window.ReactNativeWebView;
@@ -70,54 +73,53 @@ const FortuneLunchPage = () => {
 
       const handleMessage = (event) => {
         try {
-          // 이벤트 데이터가 문자열인 경우와 객체인 경우 모두 대응
-          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-
+          const data = JSON.parse(event.data);
           if (data.type === 'AD_COMPLETED') {
-            console.log("신호 수신: 광고 완료");
-            setIsAdFinished(true);
+            console.log("앱으로부터 광고 완료 신호 수신!");
+            setIsAdFinished(true); // 광고 완료 상태 업데이트
 
-            // [수정] 복잡한 조건 없이 신호 오면 바로 실행
-            const savedJson = localStorage.getItem('fortune_user_data');
-            if (savedJson) {
-              const parsedData = JSON.parse(savedJson);
-              // 분석 함수 실행 (loading 상태 등은 runAnalysis 안에서 제어하므로 무관)
-              runAnalysis(parsedData);
+            // ★ 중요: 광고가 끝났을 때만 실제 분석 로직 실행
+            const savedData = localStorage.getItem('fortune_user_data');
+            if (savedData) {
+              runAnalysis(JSON.parse(savedData));
             }
           }
-        } catch (e) {
-          console.error("메시지 파싱 에러:", e);
-        }
+        } catch (e) { }
       };
 
-      // 안드로이드와 iOS 모두 대응하기 위해 window와 document 모두 등록
       window.addEventListener('message', handleMessage);
       document.addEventListener('message', handleMessage);
-
       return () => {
         window.removeEventListener('message', handleMessage);
         document.removeEventListener('message', handleMessage);
       };
     }
-  }, []);
+  }, []); // 의존성 배열을 비워 처음에 한 번만 리스너 등록
 
   // 3. 시작 버튼 클릭
   const handleStart = () => {
     if (!name.trim()) return alert("이름을 입력해주세요!");
     if (!birthDate || !birthTime) return alert("생년월일과 시간을 모두 입력해주세요!");
 
-    // 데이터 저장
     const userData = { name, birthDate, birthTime, gender, mealType };
     localStorage.setItem('fortune_user_data', JSON.stringify(userData));
 
-    // 로딩 시작 (화면에 '기운 모으는 중' 표시)
-    setLoading(true);
-
+    // ★ [수정] 바로 runAnalysis를 호출하지 않습니다.
     if (isApp) {
-      // 앱에 광고 요청 (이후 앱의 응답을 useEffect에서 기다림)
+      // 1) 앱 환경이면 광고 먼저 띄우라고 요청
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
+
+      // 3초 뒤에도 광고 신호가 안 오면 로딩을 풀어서 다시 누를 수 있게 함
+    setTimeout(() => {
+      if (!isAdFinished) {
+        setLoading(false);
+        alert("광고 준비가 늦어지고 있습니다. 잠시 후 다시 시도해주세요.");
+      }
+    }, 3000);
+
+    
     } else {
-      // 일반 웹이면 광고 없이 바로 분석
+      // 2) 일반 웹 브라우저면 바로 분석 실행
       setIsAdFinished(true);
       runAnalysis(userData);
     }
