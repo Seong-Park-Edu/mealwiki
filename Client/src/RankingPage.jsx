@@ -166,7 +166,7 @@ function RankingPage() {
                                 </div>
                                 <div style={{ color: '#FF5722', fontWeight: 'bold', fontSize: '12px' }}>HOT 🎯</div>
                             </div>
-                            {(idx + 1) % 5 === 0 && <AdSenseUnit isApp={isApp} slotId="9379099208" format="fluid" layoutKey="-gw-3+1f-3d+2z" />}
+                            {(idx + 1) % 5 === 0 && <AdSenseUnit isApp={isApp} slotId="5511365753" format="fluid" layoutKey="-fb+5w+4e-db+86" />}
                         </div>
                     ))}
 
@@ -183,7 +183,7 @@ function RankingPage() {
                                     {item.ackCount}회 인정
                                 </div>
                             </div>
-                            {(idx + 1) % 5 === 0 && <AdSenseUnit isApp={isApp} slotId="6493081416" format="fluid" layoutKey="-gw-3+1f-3d+2z" />}
+                            {(idx + 1) % 5 === 0 && <AdSenseUnit isApp={isApp} slotId="2991513198" format="fluid" layoutKey="-fb+5w+4e-db+86" />}
                         </div>
                     ))}
 
@@ -200,7 +200,7 @@ function RankingPage() {
                                     💜 {user.totalLikes}
                                 </div>
                             </div>
-                            {(idx + 1) % 5 === 0 && <AdSenseUnit isApp={isApp} slotId="2019483938" format="fluid" layoutKey="-gw-3+1f-3d+2z" />}
+                            {(idx + 1) % 5 === 0 && <AdSenseUnit isApp={isApp} slotId="5158511536" format="fluid" layoutKey="-fb+5w+4e-db+86" />}
                         </div>
                     ))}
                 </div>
