@@ -214,19 +214,25 @@ namespace Server.Controllers
         }
 
         // ------------------------------------------------
-        // (6) 유저 랭킹 (명성 점수 순 TOP 10)
+        // (6) 유저 랭킹 (수정됨: 무한 스크롤 + 동점자 정렬)
         // ------------------------------------------------
         [HttpGet("rank")]
-        public async Task<IActionResult> GetUserRanking()
+        public async Task<IActionResult> GetUserRanking([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
+                // 1. 페이징 범위 계산
+                int from = (page - 1) * pageSize;
+                int to = from + pageSize - 1;
+
+                // 2. DB 조회 (좋아요 합계 순 -> 닉네임 순)
                 var result = await _supabase.From<User>()
                     .Order("total_likes", Supabase.Postgrest.Constants.Ordering.Descending)
-                    .Limit(10)
+                    .Order("nickname", Supabase.Postgrest.Constants.Ordering.Ascending) // ★ 핵심: 동점일 때 닉네임순 정렬
+                    .Range(from, to)
                     .Get();
 
-                // ★ FIX: Project to a clean object
+                // 3. 데이터 정제
                 var cleanRanking = result.Models.Select(u => new
                 {
                     Id = u.Id,
@@ -237,7 +243,10 @@ namespace Server.Controllers
 
                 return Ok(cleanRanking);
             }
-            catch (Exception ex) { return StatusCode(500, ex.Message); }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
     }
 }

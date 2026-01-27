@@ -565,18 +565,25 @@ namespace Server.Controllers
         }
 
         // ------------------------------------------------
-        // (10) 맛집 랭킹 (수정됨: JSON 에러 방지)
+        // (10) 맛집 랭킹 (수정됨: 무한 스크롤 + 동점자 정렬)
         // ------------------------------------------------
         [HttpGet("rank")]
-        public async Task<IActionResult> GetRestaurantRanking()
+        public async Task<IActionResult> GetRestaurantRanking([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             try
             {
+                // 1. 페이징 범위 계산
+                int from = (page - 1) * pageSize;
+                int to = from + pageSize - 1;
+
+                // 2. DB 조회 (인정 개수 순 -> ID 순)
                 var result = await _supabase.From<Restaurant>()
                     .Order("ack_count", Supabase.Postgrest.Constants.Ordering.Descending)
-                    .Limit(10).Get();
+                    .Order("id", Supabase.Postgrest.Constants.Ordering.Ascending) // ★ 핵심: 동점일 때 ID순 정렬 (순서 고정)
+                    .Range(from, to) // .Skip/.Take 대신 Range 사용
+                    .Get();
 
-                // ★ 수정된 부분: 모델을 직접 반환하지 않고, 필요한 정보만 뽑아서 보냅니다.
+                // 3. 데이터 정제
                 var cleanRanking = result.Models.Select(r => new
                 {
                     Id = r.Id,
@@ -589,7 +596,10 @@ namespace Server.Controllers
 
                 return Ok(cleanRanking);
             }
-            catch (Exception ex) { return StatusCode(500, ex.Message); }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         // ------------------------------------------------

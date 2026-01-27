@@ -183,10 +183,21 @@ function SearchHome() {
                 </Link>
               </div>
 
-              {/* [배치 2] 리스트 중간 웹용 광고 (3번째 항목 뒤에 삽입) */}
-              {index === 2 && (
-                <AdSenseUnit isApp={isApp} slotId="8906276741" format="fluid" layoutKey="-fb+5w+4e-db+86" />
+              {/* [수정된 로직] 
+           1. (index + 1) % 5 === 0 : 5번째, 10번째, 15번째... 항목 뒤에 광고 삽입
+           2. index !== 0 : 혹시 모를 첫 번째 광고 노출 방지
+            */}
+              {(index + 1) % 5 === 0 && (
+                <div style={{ margin: '20px 0' }}>
+                  <AdSenseUnit
+                    isApp={isApp}
+                    slotId="8906276741"
+                    format="fluid"
+                    layoutKey="-fb+5w+4e-db+86"
+                  />
+                </div>
               )}
+
             </div>
           ))}
         </div>
