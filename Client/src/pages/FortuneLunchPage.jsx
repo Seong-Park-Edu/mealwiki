@@ -5,7 +5,7 @@ import KakaoMap from '../components/KakaoMap';
 import AdSenseUnit from '../components/AdSenseUnit';
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import ko from "date-fns/locale/ko";
+import { ko } from "date-fns/locale";
 registerLocale("ko", ko);
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5068';
