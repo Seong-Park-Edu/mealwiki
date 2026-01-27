@@ -12,6 +12,8 @@ import PrivacyPage from './pages/PrivacyPage';
 import FortuneLunchPage from './pages/FortuneLunchPage';
 import './App.css'; // ★ CSS 파일 임포트 필수
 import AdSenseUnit from './components/AdSenseUnit';
+import GroupJoinPage from './pages/GroupJoinPage';
+import GroupRoomPage from './pages/GroupRoomPage';
 
 // NavBar 컴포넌트 (CSS 클래스 적용)
 function NavBar({ isLoggedIn }) {
@@ -26,6 +28,7 @@ function NavBar({ isLoggedIn }) {
       <div className="nav-links">
         <Link to="/" className={isActive('/')}>🏠 홈</Link>
         <Link to="/fortune" className={isActive('/fortune')}>🔮 운세</Link>
+        <Link to="/group" className={isActive('/group')}>🤝 뭐먹</Link>
         <Link to="/nearby" className={isActive('/nearby')}>📍 주변</Link>
         <Link to="/roulette" className={isActive('/roulette')}>🎰 룰렛</Link>
         <Link to="/ranking" className={isActive('/ranking')}>🏆 랭킹</Link>
@@ -303,6 +306,8 @@ function App() {
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/fortune" element={<FortuneLunchPage />} />
+          <Route path="/group" element={<GroupJoinPage />} />
+          <Route path="/group/:roomCode" element={<GroupRoomPage />} />
         </Routes>
       </div>
 
