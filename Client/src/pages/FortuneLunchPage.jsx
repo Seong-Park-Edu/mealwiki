@@ -75,13 +75,10 @@ const FortuneLunchPage = () => {
         try {
           const data = JSON.parse(event.data);
           if (data.type === 'AD_COMPLETED') {
-            console.log("앱으로부터 광고 완료 신호 수신!");
-            setIsAdFinished(true); // 광고 완료 상태 업데이트
-
-            // ★ 중요: 광고가 끝났을 때만 실제 분석 로직 실행
-            const savedData = localStorage.getItem('fortune_user_data');
-            if (savedData) {
-              runAnalysis(JSON.parse(savedData));
+            setIsAdFinished(true);
+            if (!loading && !result) {
+              const savedJson = localStorage.getItem('fortune_user_data');
+              if (savedJson) runAnalysis(JSON.parse(savedJson));
             }
           }
         } catch (e) { }
@@ -94,7 +91,7 @@ const FortuneLunchPage = () => {
         document.removeEventListener('message', handleMessage);
       };
     }
-  }, []); // 의존성 배열을 비워 처음에 한 번만 리스너 등록
+  }, [loading, result]); // 의존성 배열에 필요한 상태 추가
 
   // 3. 시작 버튼 클릭
   const handleStart = () => {
@@ -104,36 +101,13 @@ const FortuneLunchPage = () => {
     const userData = { name, birthDate, birthTime, gender, mealType };
     localStorage.setItem('fortune_user_data', JSON.stringify(userData));
 
+    // 분석 시작
+    runAnalysis(userData);
+
     if (isApp) {
-      // [변경] 버튼을 누르자마자 로딩창을 띄우지 않고, 버튼 텍스트 등을 통해 '준비 중'임을 알립니다.
-      // 만약 버튼에 직접 "준비 중..."을 띄우고 싶다면 별도의 'isPreparing' 상태를 쓰셔도 좋지만,
-      // 일단 UI가 바로 변하지 않게 하려면 여기서 setLoading(true)를 하지 않습니다.
-
-      console.log("3초 대기 시작... 광고 로딩 시간을 법니다.");
-
-      // 3초 뒤에 실행될 로직
-      setTimeout(() => {
-        // 1) 3초 뒤에 드디어 로딩 화면(회색/하얀 오버레이)을 띄웁니다.
-        setLoading(true);
-
-        // 2) 동시에 앱에 광고 송출 요청을 보냅니다.
-        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
-
-        // 3) 혹시 광고가 계속 안 나올 경우를 대비한 안전장치 (광고 요청 후 5초 뒤)
-        setTimeout(() => {
-          if (!isAdFinished) {
-            setLoading(false);
-            alert("광고 준비가 늦어지고 있습니다. 잠시 후 다시 시도해주세요.");
-          }
-        }, 5000);
-
-      }, 3000); // 정확히 3초 대기
-
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
     } else {
-      // 일반 웹 브라우저는 지연 없이 바로 실행
-      setLoading(true);
       setIsAdFinished(true);
-      runAnalysis(userData);
     }
   };
 
