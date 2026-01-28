@@ -174,7 +174,7 @@ function WikiPage() {
     const handleBookmark = async () => {
         if (!isLoggedIn) { if (window.confirm("로그인 필요. 이동?")) navigate('/login'); return; }
         try {
-            const response = await axios.post(`${apiUrl}/api/wiki/bookmark`, { nickname: myNickname, restaurantId: id, restaurantName: restaurantName, address: restaurantAddress, x: coord.x, y: coord.y });
+            const response = await axios.post(`${apiUrl}/api/wiki/bookmark`, { nickname: myNickname, restaurantId: id, restaurantName: restaurantName, address: restaurantAddress, x: String(coord.x), y: String(coord.y) });
             setIsBookmarked(response.data.isBookmarked);
             alert(response.data.message);
         } catch (error) { alert("오류"); }
