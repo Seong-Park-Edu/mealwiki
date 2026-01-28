@@ -125,9 +125,9 @@ function DbMapPage() {
     return (
         <div className="page-container" style={{ height: '100vh', display: 'flex', flexDirection: 'column', padding: 0, backgroundColor: '#f9f9f9' }}>
             {/* 1. 상단 타이틀 */}
-            <div style={{ padding: '15px 20px', backgroundColor: 'white', zIndex: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-                <h1 className="title" style={{ margin: 0, fontSize: '18px' }}>🗺️ 대동맛지도 (우리 DB)</h1>
-                <p style={{ margin: '5px 0 0', fontSize: '13px', color: '#888' }}>
+            <div style={{ padding: '15px 20px', backgroundColor: 'white', zIndex: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.03)', textAlign: 'center' }}>
+                <h1 className="title" style={{ margin: 0, fontSize: '18px' }}>🗺️ 대동맛지도</h1>
+                <p style={{ margin: '5px 0 0', fontSize: '13px', color: '#888', textAlign: 'center' }}>
                     유저들이 직접 등록한 {dbRestaurants.length}개의 맛집
                 </p>
             </div>
