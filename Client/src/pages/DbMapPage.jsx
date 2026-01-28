@@ -173,23 +173,25 @@ function DbMapPage() {
                         }
                     </button>
 
-                    {/* 하단 광고 (위치 조정) */}
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '0',
-                        left: '0',
-                        right: '0',
-                        zIndex: 20,
-                        padding: '0 10px 10px 10px',
+                </div>
+            </div>
 
-                        // ★ [핵심 1] 이 영역은 터치 이벤트를 무시하고 통과시킵니다.
-                        pointerEvents: 'none'
-                    }}>
-                        {/* ★ [핵심 2] 실제 광고는 클릭되어야 하므로 div로 감싸서 이벤트를 다시 살립니다. */}
-                        <div style={{ pointerEvents: 'auto' }}>
-                            <AdSenseUnit isApp={isApp} slotId="1188063662" />
-                        </div>
-                    </div>
+
+            {/* 하단 광고 (위치 조정) */}
+            <div style={{
+                position: 'absolute',
+                bottom: '0',
+                left: '0',
+                right: '0',
+                zIndex: 20,
+                padding: '0 10px 10px 10px',
+
+                // ★ [핵심 1] 이 영역은 터치 이벤트를 무시하고 통과시킵니다.
+                pointerEvents: 'none'
+            }}>
+                {/* ★ [핵심 2] 실제 광고는 클릭되어야 하므로 div로 감싸서 이벤트를 다시 살립니다. */}
+                <div style={{ pointerEvents: 'auto' }}>
+                    <AdSenseUnit isApp={isApp} slotId="3154070810" />
                 </div>
             </div>
 
