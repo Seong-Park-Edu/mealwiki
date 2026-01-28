@@ -1,7 +1,14 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Routes, Route, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import WikiPage from './WikiPage';
+import { useState } from 'react';
+import { Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
+import './App.css';
+
+// ★ 분리한 컴포넌트들을 불러옵니다
+import NavBar from './components/NavBar';
+import SearchHome from './pages/SearchHome'; 
+import LogoutPage from './pages/LogoutPage';
+
+// 나머지 페이지들
+import WikiPage from './WikiPage'; // 경로가 src 바로 아래라면 유지, pages 폴더 안이라면 ./pages/WikiPage로 수정 필요
 import RoulettePage from './RoulettePage';
 import AuthorPage from './AuthorPage';
 import LoginPage from './LoginPage';
@@ -10,283 +17,12 @@ import ChangePasswordPage from './ChangePasswordPage';
 import RankingPage from './RankingPage';
 import PrivacyPage from './pages/PrivacyPage';
 import FortuneLunchPage from './pages/FortuneLunchPage';
-import './App.css'; // ★ CSS 파일 임포트 필수
-import AdSenseUnit from './components/AdSenseUnit';
 import GroupJoinPage from './pages/GroupJoinPage';
 import GroupRoomPage from './pages/GroupRoomPage';
 
-// NavBar 컴포넌트 (CSS 클래스 적용)
-function NavBar({ isLoggedIn }) {
-  const userId = localStorage.getItem('userId');
-  const location = useLocation(); // 현재 경로 확인용
-
-  // 현재 활성화된 탭인지 확인하는 함수
-  const isActive = (path) => location.pathname === path ? 'nav-item active' : 'nav-item';
-
-  return (
-    <nav className="navbar">
-      <div className="nav-links">
-        <Link to="/" className={isActive('/')}>🏠 홈</Link>
-        <Link to="/fortune" className={isActive('/fortune')}>🔮 운세</Link>
-        <Link to="/group" className={isActive('/group')}>🤝 뭐먹</Link>
-        <Link to="/nearby" className={isActive('/nearby')}>📍 주변</Link>
-        <Link to="/roulette" className={isActive('/roulette')}>🎰 룰렛</Link>
-        <Link to="/ranking" className={isActive('/ranking')}>🏆 랭킹</Link>
-      </div>
-
-      {isLoggedIn ? (
-        <Link to={`/author/${userId}`} className="nav-item" style={{ color: '#2196F3' }}>
-          😎
-        </Link>
-      ) : (
-        <Link to="/login" className="nav-item" style={{ color: '#4CAF50' }}>🔑</Link>
-      )}
-    </nav>
-  );
-}
-
-// 검색 화면 (SearchHome) - 카드 디자인 적용
-function SearchHome() {
-  const [keyword, setKeyword] = useState('');
-  const [restaurants, setRestaurants] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [activeTag, setActiveTag] = useState(null);
-  const [isApp, setIsApp] = useState(false); // 앱 접속 여부 판단
-  const [selectedRestaurant, setSelectedRestaurant] = useState(null); // ★ 추가: 선택된 식당 정보를 관리할 상태
-  const navigate = useNavigate(); // Link 대신 navigate를 사용하기 위해 필요
-
-  useEffect(() => {
-    // 이름표(User-Agent)를 확인하여 앱 여부 판별
-    const ua = window.navigator.userAgent;
-    if (ua.indexOf('MealWikiApp') !== -1 || !!window.ReactNativeWebView) {
-      setIsApp(true);
-    }
-  }, []);
-
-
-  const PREDEFINED_TAGS = ["🍚 혼밥가능", "👩‍❤️‍👨 데이트", "🍺 회식장소", "💸 가성비갑", "😋 JMT(존맛)", "✨ 분위기맛집", "😊 친절해요", "🚗 주차가능", "🏞️ 뷰맛집", "🤫 조용해요"];
-
-  useEffect(() => {
-    const savedKeyword = sessionStorage.getItem('lastKeyword');
-    const savedList = sessionStorage.getItem('lastRestaurants');
-    if (savedKeyword) setKeyword(savedKeyword);
-    if (savedList) setRestaurants(JSON.parse(savedList));
-  }, []);
-
-  const searchRestaurants = async () => {
-    if (!keyword) return;
-    setLoading(true);
-    setActiveTag(null);
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5068';
-      const response = await axios.get(`${apiUrl}/api/food/search`, { params: { keyword: keyword } });
-      setRestaurants(response.data);
-      sessionStorage.setItem('lastKeyword', keyword);
-      sessionStorage.setItem('lastRestaurants', JSON.stringify(response.data));
-    } catch (error) { alert("서버 연결 실패"); } finally { setLoading(false); }
-  };
-
-  const handleTagFilter = async (tag) => {
-    // 1. [비활성화 로직] 이미 선택된 태그를 다시 클릭한 경우
-    if (activeTag === tag) {
-      setActiveTag(null);    // 활성 태그 초기화
-      setRestaurants([]);   // 리스트 초기화 (혹은 전체 목록 조회 함수 실행)
-      return;               // 아래 API 호출을 실행하지 않고 함수 종료
-    }
-
-    // 2. [활성화 로직] 새로운 태그를 클릭한 경우
-    setLoading(true);
-    setKeyword('');
-    setActiveTag(tag);
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5068';
-      const response = await axios.post(`${apiUrl}/api/wiki/filter-by-tag`, {
-        restaurantIds: [],
-        targetTag: tag
-      });
-      setRestaurants(response.data);
-    } catch (error) {
-      console.error(error);
-      alert("오류 발생");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  // 검색 실행 함수에 blur 로직 추가
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      searchRestaurants(); // 검색 실행
-      e.currentTarget.blur(); // ★ 핵심: 입력창에서 포커스를 빼서 자판을 내립니다.
-    }
-  };
-
-
-  return (
-    <div className="page-container">
-      <h1 className="title text-center">🍽️ 맛집 위키</h1>
-
-      {/* ★ [수정됨] 둥근 캡슐형 검색창 적용 */}
-      <div className="search-bar-wrapper">
-        <input
-          className="search-input-field"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="지역 + 메뉴 (예: 홍대 라멘)"
-        />
-        <button className="search-btn-inside" onClick={searchRestaurants}>
-          🔍 검색
-        </button>
-      </div>
-
-      {/* 태그 필터 영역 */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '30px', justifyContent: 'center' }}>
-        {PREDEFINED_TAGS.map(tag => (
-          <button
-            key={tag}
-            onClick={() => handleTagFilter(tag)}
-            className={`tag-btn ${activeTag === tag ? 'active' : ''}`}
-          >
-            {tag}
-          </button>
-        ))}
-      </div>
-
-      {/* 결과 리스트 */}
-      {loading ? (
-        <div className="text-center sub-text" style={{ padding: '40px' }}>
-          <div style={{ fontSize: '40px', marginBottom: '10px' }}>🥘</div>
-          맛집을 찾고 있어요...
-        </div>
-      ) : (
-        <div>
-          {activeTag && restaurants.length === 0 && (
-            <div className="text-center sub-text" style={{ padding: '40px' }}>
-              아직 '<strong>{activeTag}</strong>' 태그가 달린 맛집이 없어요. 😢<br />
-              여러분이 첫 번째로 등록해 주세요!
-            </div>
-          )}
-
-          {restaurants.map((r, index) => (
-            <div key={r.id}>
-              <div
-                className="restaurant-card"
-                onClick={() => setSelectedRestaurant(r)} // ★ 클릭 시 모달 오픈을 위해 데이터 저장
-                style={{ cursor: 'pointer' }}
-              >
-                {/* 기존 Link 태그는 삭제하고 내부 내용만 유지 */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <h3 style={{ margin: '0 0 5px 0', fontSize: '18px', fontWeight: 'bold' }}>
-                    {r.place_name}
-                  </h3>
-                  <span style={{ color: '#ccc' }}>›</span>
-                </div>
-                <div className="sub-text">📍 {r.road_address_name || r.address_name}</div>
-                <div className="category-badge">{r.category_name || '맛집'}</div>
-              </div>
-
-              {/* [수정된 로직] 
-           1. (index + 1) % 5 === 0 : 5번째, 10번째, 15번째... 항목 뒤에 광고 삽입
-           2. index !== 0 : 혹시 모를 첫 번째 광고 노출 방지
-            */}
-              {(index + 1) % 5 === 0 && (
-                <div style={{ margin: '20px 0' }}>
-                  <AdSenseUnit
-                    isApp={isApp}
-                    slotId="8906276741"
-                    format="fluid"
-                    layoutKey="-fb+5w+4e-db+86"
-                  />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-
-
-      {/* ★ 선택 모달 UI 추가 */}
-      {selectedRestaurant && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-          backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1000,
-          display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px'
-        }} onClick={() => setSelectedRestaurant(null)}>
-
-          <div style={{
-            width: '100%', maxWidth: '320px', backgroundColor: 'white',
-            borderRadius: '16px', padding: '24px', textAlign: 'center',
-            animation: 'pop 0.3s ease'
-          }} onClick={(e) => e.stopPropagation()}>
-
-            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px' }}>{selectedRestaurant.place_name}</h3>
-            <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
-              어디로 이동할까요?
-            </p>
-
-            {/* 1. 카카오 지도 (강조형) */}
-            <button
-              onClick={() => window.open(`https://place.map.kakao.com/${selectedRestaurant.id}`, '_blank')}
-              style={{
-                width: '100%', padding: '14px', borderRadius: '10px',
-                border: 'none', background: '#FEE500', color: '#3C1E1E',
-                fontWeight: 'bold', fontSize: '15px', marginBottom: '10px',
-                cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-              }}
-            >
-              💛 카카오 지도 리뷰 보기
-            </button>
-
-            {/* 2. 내 wikipost (보조형) */}
-            <button
-              onClick={() => navigate(`/wiki/${selectedRestaurant.id}`, {
-                state: {
-                  name: selectedRestaurant.place_name,
-                  address: selectedRestaurant.road_address_name || selectedRestaurant.address_name,
-                  x: selectedRestaurant.x,
-                  y: selectedRestaurant.y,
-                  ...selectedRestaurant
-                }
-              })}
-              style={{
-                width: '100%', padding: '14px', borderRadius: '10px',
-                border: '1px solid #ddd', background: 'white', color: '#555',
-                fontWeight: '500', fontSize: '14px', cursor: 'pointer'
-              }}
-            >
-              📝 MealWiki 상세 정보
-            </button>
-
-            <button
-              onClick={() => setSelectedRestaurant(null)}
-              style={{ marginTop: '15px', background: 'none', border: 'none', color: '#999', fontSize: '13px', textDecoration: 'underline' }}
-            >
-              취소
-            </button>
-          </div>
-        </div>
-      )}
-
-
-
-      {/* [배치 1] 마지막 광고 */}
-      <AdSenseUnit isApp={isApp} slotId="4765837285" />
-
-    </div>
-  );
-}
-
-
-
-
-// ★ [수정 2] 보호된 라우트 (문지기) 컴포넌트 추가
-// 이 컴포넌트는 ID가 없는 사용자가 접근하면 경고창을 띄우고 로그인 페이지로 보냅니다.
+// 보호된 라우트 (App.jsx에 둬도 괜찮지만, components 폴더로 빼면 더 좋습니다)
 const ProtectedRoute = ({ children }) => {
   const userId = localStorage.getItem('userId');
-
   // ID가 없거나, 문자열 "null", "undefined"로 잘못 저장된 경우 차단
   if (!userId || userId === 'null' || userId === 'undefined') {
     alert("회원 전용 페이지입니다. 로그인 해주세요! 🚗");
@@ -295,59 +31,29 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-
-// ▼▼▼▼▼ 이 코드가 빠져서 에러가 난 것입니다. 여기에 붙여넣으세요 ▼▼▼▼▼
-const LogoutPage = () => {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // 1. 저장된 정보 삭제
-    localStorage.clear();
-
-    // 2. 알림
-    alert("🧹 로그아웃(초기화) 되었습니다.");
-
-    // 3. 홈으로 이동하며 새로고침 (확실한 초기화)
-    window.location.href = '/';
-  }, []);
-
-  return <div style={{ textAlign: 'center', marginTop: '100px' }}>로그아웃 처리 중... ⏳</div>;
-};
-// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
-
-
-
-// 메인 App 컴포넌트 (앱 컨테이너 적용)
 function App() {
-
-
-  // ★ [수정 3] 로그인 상태 체크 로직 강화
-  // 친구의 브라우저에 닉네임만 있고 ID가 없거나 이상할 때 '로그인 안 됨'으로 인식하게 합니다.
+  // 로그인 상태 관리
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     const uid = localStorage.getItem('userId');
     return uid && uid !== 'null' && uid !== 'undefined';
   });
 
-  // ★ [추가 1] 비밀 클릭 카운트 상태
+  // 이스터 에그 (20회 클릭) 상태
   const [secretCount, setSecretCount] = useState(0);
 
-  //  로그아웃 함수
   const handleLogout = () => {
     localStorage.removeItem('userId');
     localStorage.removeItem('nickname');
     setIsLoggedIn(false);
   };
 
-
-  // ★ [추가 2] 20번 클릭 감지 핸들러
   const handleSecretClick = () => {
     setSecretCount(prev => {
       const newCount = prev + 1;
       if (newCount >= 20) {
-        handleLogout(); // 로그아웃 실행
+        handleLogout();
         alert("🛑 20회 클릭! 강제 로그아웃 되었습니다.");
-        return 0; // 카운트 리셋
+        return 0;
       }
       return newCount;
     });
@@ -355,72 +61,56 @@ function App() {
 
   return (
     <div className="app-container">
-      <NavBar isLoggedIn={isLoggedIn} />
+      {/* NavBar 분리됨 */}
+      <NavBar isLoggedIn={isLoggedIn} onLogout={handleLogout} />
 
-      {/* 메인 콘텐츠 영역 */}
       <div className="content-area" style={{ minHeight: '80vh' }}>
         <Routes>
           <Route path="/" element={<SearchHome />} />
           <Route path="/wiki/:id" element={<WikiPage />} />
           <Route path="/roulette" element={<RoulettePage />} />
-          {/* ★ [수정 4] AuthorPage를 ProtectedRoute로 감싸기 */}
-          <Route
-            path="/author/:userId"
+          
+          <Route 
+            path="/author/:userId" 
             element={
               <ProtectedRoute>
                 <AuthorPage onLogout={handleLogout} />
               </ProtectedRoute>
-            }
+            } 
           />
+          
           <Route path="/login" element={<LoginPage setIsLoggedIn={setIsLoggedIn} />} />
           <Route path="/nearby" element={<NearbyPage />} />
-          {/* 비밀번호 변경 페이지도 보호하면 좋습니다 */}
-          <Route
-            path="/change-password"
+          
+          <Route 
+            path="/change-password" 
             element={
               <ProtectedRoute>
                 <ChangePasswordPage />
               </ProtectedRoute>
-            }
+            } 
           />
+          
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/fortune" element={<FortuneLunchPage />} />
           <Route path="/group" element={<GroupJoinPage />} />
           <Route path="/group/:roomCode" element={<GroupRoomPage />} />
+          
+          {/* LogoutPage 분리됨 */}
           <Route path="/logout" element={<LogoutPage />} />
         </Routes>
       </div>
 
-      {/* ★ [추가] 하단 푸터 영역 */}
-      <footer className="footer" style={{
-        padding: '40px 20px',
-        marginTop: '20px',
-        textAlign: 'center',
-        borderTop: '1px solid #eee',
-        backgroundColor: '#fafafa'
-      }}>
-        {/* ★ [추가 3] 여기 onClick과 스타일을 수정하세요 */}
-        <div
-          onClick={handleSecretClick}
-          style={{
-            marginBottom: '10px',
-            fontSize: '14px',
-            color: '#666',
-            fontWeight: 'bold',
-            cursor: 'pointer',       // 클릭 가능한 손가락 모양
-            userSelect: 'none'       // 광클할 때 텍스트 드래그 방지
-          }}
+      <footer className="footer" style={{ padding: '40px 20px', marginTop: '20px', textAlign: 'center', borderTop: '1px solid #eee', backgroundColor: '#fafafa' }}>
+        <div 
+          onClick={handleSecretClick} 
+          style={{ marginBottom: '10px', fontSize: '14px', color: '#666', fontWeight: 'bold', cursor: 'pointer', userSelect: 'none' }}
         >
           MealWiki (맛집 위키) {secretCount > 0 && secretCount < 20 && <span style={{ fontSize: '10px', color: '#ddd' }}>{secretCount}</span>}
         </div>
         <div style={{ marginBottom: '15px' }}>
-          <Link to="/privacy" style={{
-            fontSize: '12px',
-            color: '#999',
-            textDecoration: 'underline',
-            marginRight: '15px'
-          }}>
+          <Link to="/privacy" style={{ fontSize: '12px', color: '#999', textDecoration: 'underline', marginRight: '15px' }}>
             개인정보처리방침
           </Link>
           <span style={{ fontSize: '12px', color: '#999' }}>|</span>

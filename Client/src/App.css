@@ -488,7 +488,6 @@ input:focus, textarea:focus {
   padding: 20px;
   margin-bottom: 20px;
   transition: border-color 0.2s;
-  min-height: 500px;
   line-height: 1.6;
 }
 
@@ -555,7 +554,10 @@ input[type="time"]:focus {
 }
 
 .wiki-textarea-posting, 
-input[type="text"] {
+input[type="text"].posting,
+input[type="date"].posting,
+input[type="time"].posting
+{
   width: 100%;
   padding: 14px 16px;
   border: 1px solid #eee; /* 아주 연한 테두리 */
