@@ -180,8 +180,9 @@ function DbMapPage() {
             {/* 3. 하단 광고 영역 (지도 밖으로 완전히 분리) */}
             <div style={{ padding: '10px 0', textAlign: 'center', backgroundColor: '#f9f9f9' }}>
                 {/* 여기에 본인의 광고 ID를 넣으세요 */}
-                <AdSenseUnit isApp={isApp} slotId="1188063662" />
+                {/* <AdSenseUnit isApp={isApp} slotId="1188063662" /> */}
             </div>
+
 
             {/* 식당 선택 모달 (기존 유지) */}
             {selectedRestaurant && (
