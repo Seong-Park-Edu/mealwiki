@@ -126,18 +126,18 @@ function DbMapPage() {
         <div className="page-container" style={{ height: '100vh', display: 'flex', flexDirection: 'column', padding: 0, backgroundColor: '#f9f9f9' }}>
             {/* 1. 상단 타이틀 */}
             <div style={{ padding: '15px 20px', backgroundColor: 'white', zIndex: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-                <h1 className="title" style={{ margin: 0, fontSize: '18px', textAlign: 'center' }}>🗺️ 대동맛지도</h1>
-                <p style={{ margin: '5px 0 0', fontSize: '13px', color: '#888', textAlign: 'center' }}>
+                <h1 className="title" style={{ margin: 0, fontSize: '18px' }}>🗺️ 대동맛지도 (우리 DB)</h1>
+                <p style={{ margin: '5px 0 0', fontSize: '13px', color: '#888' }}>
                     유저들이 직접 등록한 {dbRestaurants.length}개의 맛집
                 </p>
             </div>
 
-            {/* 2. 지도 영역 (여백을 주는 바깥 틀) */}
-            <div style={{ flex: 1, position: 'relative', padding: '15px', display: 'flex', flexDirection: 'column' }}>
+            {/* 2. 지도 영역 (flex: 1을 주어 남은 공간을 다 차지하게 함) */}
+            <div style={{ flex: 1, position: 'relative', padding: '15px', paddingBottom: '0', display: 'flex', flexDirection: 'column' }}>
 
-                {/* 3. 실제 카드 (흰색 박스 + 그림자 + 둥근 모서리) */}
+                {/* 지도 카드 */}
                 <div style={{
-                    flex: 1, // 부모 영역을 꽉 채우도록 설정
+                    flex: 1, // 부모 영역을 꽉 채움
                     width: '100%',
                     borderRadius: '20px',
                     overflow: 'hidden',
@@ -155,12 +155,12 @@ function DbMapPage() {
                         <div ref={mapContainer} style={{ width: '100%', height: '100%' }}></div>
                     )}
 
-                    {/* 내 위치 찾기 버튼 */}
+                    {/* 내 위치 찾기 버튼 (지도 안에 그대로 유지) */}
                     <button
                         onClick={findMyLocation}
                         disabled={isFindingLocation}
                         style={{
-                            position: 'absolute', bottom: '120px', right: '15px', zIndex: 20,
+                            position: 'absolute', bottom: '20px', right: '15px', zIndex: 20, // 위치를 조금 더 아래로 내림
                             backgroundColor: 'white', border: '1px solid #eee', borderRadius: '50%',
                             width: '45px', height: '45px', fontSize: '22px', cursor: 'pointer',
                             boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -173,29 +173,17 @@ function DbMapPage() {
                         }
                     </button>
 
+                    {/* ★ 원래 여기 있던 광고 코드를 삭제했습니다! ★ */}
                 </div>
             </div>
 
-
-            {/* 하단 광고 (위치 조정) */}
-            <div style={{
-                position: 'absolute',
-                bottom: '0',
-                left: '0',
-                right: '0',
-                zIndex: 20,
-                padding: '0 10px 10px 10px',
-
-                // ★ [핵심 1] 이 영역은 터치 이벤트를 무시하고 통과시킵니다.
-                pointerEvents: 'none'
-            }}>
-                {/* ★ [핵심 2] 실제 광고는 클릭되어야 하므로 div로 감싸서 이벤트를 다시 살립니다. */}
-                <div style={{ pointerEvents: 'auto' }}>
-                    <AdSenseUnit isApp={isApp} slotId="3154070810" />
-                </div>
+            {/* 3. 하단 광고 영역 (지도 밖으로 완전히 분리) */}
+            <div style={{ padding: '10px 0', textAlign: 'center', backgroundColor: '#f9f9f9' }}>
+                {/* 여기에 본인의 광고 ID를 넣으세요 */}
+                <AdSenseUnit isApp={isApp} slotId="1188063662" />
             </div>
 
-            {/* 식당 선택 모달 (기존 코드 유지) */}
+            {/* 식당 선택 모달 (기존 유지) */}
             {selectedRestaurant && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }} onClick={() => setSelectedRestaurant(null)}>
                     <div style={{ width: '100%', maxWidth: '320px', backgroundColor: 'white', borderRadius: '16px', padding: '24px', textAlign: 'center', animation: 'pop 0.3s ease', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }} onClick={(e) => e.stopPropagation()}>
