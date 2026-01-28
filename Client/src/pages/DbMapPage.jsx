@@ -54,7 +54,7 @@ function DbMapPage() {
                 // alert("위치 정보를 가져오지 못했습니다. GPS 권한을 확인해주세요.");
                 setIsFindingLocation(false); // ★ 로딩 끝 (에러 시)
             },
-            { enableHighAccuracy: true, timeout: 5000 } // 5초 타임아웃
+            { enableHighAccuracy: true, timeout: 15000 } // 5초 타임아웃
         );
     };
 
