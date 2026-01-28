@@ -296,6 +296,24 @@ const ProtectedRoute = ({ children }) => {
 };
 
 
+// ▼▼▼▼▼ 이 코드가 빠져서 에러가 난 것입니다. 여기에 붙여넣으세요 ▼▼▼▼▼
+const LogoutPage = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // 1. 저장된 정보 삭제
+    localStorage.clear();
+
+    // 2. 알림
+    alert("🧹 로그아웃(초기화) 되었습니다.");
+
+    // 3. 홈으로 이동하며 새로고침 (확실한 초기화)
+    window.location.href = '/';
+  }, []);
+
+  return <div style={{ textAlign: 'center', marginTop: '100px' }}>로그아웃 처리 중... ⏳</div>;
+};
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 
 
@@ -311,11 +329,28 @@ function App() {
     return uid && uid !== 'null' && uid !== 'undefined';
   });
 
+  // ★ [추가 1] 비밀 클릭 카운트 상태
+  const [secretCount, setSecretCount] = useState(0);
 
+  //  로그아웃 함수
   const handleLogout = () => {
     localStorage.removeItem('userId');
     localStorage.removeItem('nickname');
     setIsLoggedIn(false);
+  };
+
+
+  // ★ [추가 2] 20번 클릭 감지 핸들러
+  const handleSecretClick = () => {
+    setSecretCount(prev => {
+      const newCount = prev + 1;
+      if (newCount >= 20) {
+        handleLogout(); // 로그아웃 실행
+        alert("🛑 20회 클릭! 강제 로그아웃 되었습니다.");
+        return 0; // 카운트 리셋
+      }
+      return newCount;
+    });
   };
 
   return (
@@ -353,6 +388,7 @@ function App() {
           <Route path="/fortune" element={<FortuneLunchPage />} />
           <Route path="/group" element={<GroupJoinPage />} />
           <Route path="/group/:roomCode" element={<GroupRoomPage />} />
+          <Route path="/logout" element={<LogoutPage />} />
         </Routes>
       </div>
 
@@ -364,8 +400,19 @@ function App() {
         borderTop: '1px solid #eee',
         backgroundColor: '#fafafa'
       }}>
-        <div style={{ marginBottom: '10px', fontSize: '14px', color: '#666', fontWeight: 'bold' }}>
-          MealWiki (맛집 위키)
+        {/* ★ [추가 3] 여기 onClick과 스타일을 수정하세요 */}
+        <div
+          onClick={handleSecretClick}
+          style={{
+            marginBottom: '10px',
+            fontSize: '14px',
+            color: '#666',
+            fontWeight: 'bold',
+            cursor: 'pointer',       // 클릭 가능한 손가락 모양
+            userSelect: 'none'       // 광클할 때 텍스트 드래그 방지
+          }}
+        >
+          MealWiki (맛집 위키) {secretCount > 0 && secretCount < 20 && <span style={{ fontSize: '10px', color: '#ddd' }}>{secretCount}</span>}
         </div>
         <div style={{ marginBottom: '15px' }}>
           <Link to="/privacy" style={{
