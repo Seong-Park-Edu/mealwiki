@@ -20,6 +20,7 @@ import FortuneLunchPage from './pages/FortuneLunchPage';
 import GroupJoinPage from './pages/GroupJoinPage';
 import GroupRoomPage from './pages/GroupRoomPage';
 import DbMapPage from './pages/DbMapPage'; // ★ 임포트 추가
+import DecisionPage from './pages/DecisionPage';
 
 // 보호된 라우트 (App.jsx에 둬도 괜찮지만, components 폴더로 빼면 더 좋습니다)
 const ProtectedRoute = ({ children }) => {
@@ -98,6 +99,8 @@ function App() {
           <Route path="/group" element={<GroupJoinPage />} />
           <Route path="/group/:roomCode" element={<GroupRoomPage />} />
           <Route path="/our-map" element={<DbMapPage />} />
+
+          <Route path="/decision" element={<DecisionPage />} />
           
           {/* LogoutPage 분리됨 */}
           <Route path="/logout" element={<LogoutPage />} />
