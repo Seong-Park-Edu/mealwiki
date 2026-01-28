@@ -201,7 +201,7 @@ function WikiPage() {
     const handleSave = async () => {
         if (!isLoggedIn) return alert("로그인 필요");
         try {
-            await axios.post(`${apiUrl}/api/wiki`, { restaurantId: id, restaurantName, address: restaurantAddress, content, nickname: myNickname, x: coord.x, y: coord.y });
+            await axios.post(`${apiUrl}/api/wiki`, { restaurantId: id, restaurantName, address: restaurantAddress, content, nickname: myNickname, x: String(coord.x), y: String(coord.y) });
             alert("저장되었습니다!"); fetchWiki();
         } catch (error) { alert("저장 실패"); }
     };
@@ -380,7 +380,7 @@ function WikiPage() {
                         <button key={label} className="template-chip" onClick={() => handleTemplateClick(label)} disabled={isLocked && !isAdmin} style={{ cursor: (isLocked && !isAdmin) ? 'not-allowed' : 'pointer', filter: (isLocked && !isAdmin) ? 'grayscale(1)' : 'none' }}>{label}</button>
                     ))}
                 </div>
-                <textarea id="wiki-editor" className="wiki-textarea" value={content} onChange={(e) => setContent(e.target.value)} placeholder={`이 식당의 정보를 함께 채워주세요!\n\n(예시)\n🕒 영업시간: 매일 11:00 ~ 21:00\n🚗 주차: 가게 앞 2대 가능\n🍽️ 추천: 치즈 돈까스가 정말 맛있어요!`} disabled={isLocked && !isAdmin} />
+                <textarea id="wiki-editor" className="wiki-textarea-posting" value={content} onChange={(e) => setContent(e.target.value)} placeholder={`이 식당의 정보를 함께 채워주세요!\n\n(예시)\n🕒 영업시간: 매일 11:00 ~ 21:00\n🚗 주차: 가게 앞 2대 가능\n🍽️ 추천: 치즈 돈까스가 정말 맛있어요!`} disabled={isLocked && !isAdmin} />
             </div>
             <button onClick={handleSave} className="btn-primary" disabled={isLocked && !isAdmin} style={{ marginBottom: '40px', opacity: (isLocked && !isAdmin) ? 0.5 : 1, filter: (isLocked && !isAdmin) ? 'grayscale(1)' : 'none' }}>{isLocked && !isAdmin ? "🔒 보호된 문서입니다" : "✨ 위키 저장하기"}</button>
 
