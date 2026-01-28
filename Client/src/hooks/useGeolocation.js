@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 export const useGeolocation = () => {
   const [location, setLocation] = useState({ 
-    lat: 37.5665, lng: 126.9780, // 기본값: 서울시청
+    lat: 37.52964486850449, lng: 126.96999659692327, // 기본값: 아모레 퍼시픽
     loaded: false 
   });
 
@@ -26,6 +26,7 @@ export const useGeolocation = () => {
         lng: pos.coords.longitude,
         loaded: true
       });
+      console.log(`GPS Success: (${pos.coords.latitude}, ${pos.coords.longitude})`);
     };
 
     const error = (err) => {
