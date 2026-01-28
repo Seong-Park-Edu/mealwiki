@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import WikiPage from './WikiPage';
 import RoulettePage from './RoulettePage';
 import AuthorPage from './AuthorPage';
@@ -279,9 +279,38 @@ function SearchHome() {
   );
 }
 
+
+
+
+// ★ [수정 2] 보호된 라우트 (문지기) 컴포넌트 추가
+// 이 컴포넌트는 ID가 없는 사용자가 접근하면 경고창을 띄우고 로그인 페이지로 보냅니다.
+const ProtectedRoute = ({ children }) => {
+  const userId = localStorage.getItem('userId');
+
+  // ID가 없거나, 문자열 "null", "undefined"로 잘못 저장된 경우 차단
+  if (!userId || userId === 'null' || userId === 'undefined') {
+    alert("회원 전용 페이지입니다. 로그인 해주세요! 🚗");
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
+
+
+
+
+
 // 메인 App 컴포넌트 (앱 컨테이너 적용)
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('userId'));
+
+
+  // ★ [수정 3] 로그인 상태 체크 로직 강화
+  // 친구의 브라우저에 닉네임만 있고 ID가 없거나 이상할 때 '로그인 안 됨'으로 인식하게 합니다.
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    const uid = localStorage.getItem('userId');
+    return uid && uid !== 'null' && uid !== 'undefined';
+  });
+
 
   const handleLogout = () => {
     localStorage.removeItem('userId');
@@ -299,10 +328,26 @@ function App() {
           <Route path="/" element={<SearchHome />} />
           <Route path="/wiki/:id" element={<WikiPage />} />
           <Route path="/roulette" element={<RoulettePage />} />
-          <Route path="/author/:userId" element={<AuthorPage onLogout={handleLogout} />} />
+          {/* ★ [수정 4] AuthorPage를 ProtectedRoute로 감싸기 */}
+          <Route
+            path="/author/:userId"
+            element={
+              <ProtectedRoute>
+                <AuthorPage onLogout={handleLogout} />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<LoginPage setIsLoggedIn={setIsLoggedIn} />} />
           <Route path="/nearby" element={<NearbyPage />} />
-          <Route path="/change-password" element={<ChangePasswordPage />} />
+          {/* 비밀번호 변경 페이지도 보호하면 좋습니다 */}
+          <Route
+            path="/change-password"
+            element={
+              <ProtectedRoute>
+                <ChangePasswordPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/fortune" element={<FortuneLunchPage />} />
