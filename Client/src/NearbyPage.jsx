@@ -3,7 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { useGeolocation } from './hooks/useGeolocation';
 import KakaoMap from './components/KakaoMap';
 import AdSenseUnit from './components/AdSenseUnit';
-import axios from 'axios'
+import axios from 'axios';
+
+// ★ [추가 1] 음식 카테고리 목록
+const FOOD_CATEGORIES = [
+    { name: "전체", code: "" },
+    { name: "한식", code: "한식" },
+    { name: "중식", code: "중식" },
+    { name: "일식", code: "일식" },
+    { name: "양식", code: "양식" },
+    { name: "치킨", code: "치킨" },
+    { name: "피자", code: "피자" },
+    { name: "카페", code: "카페" },
+    { name: "디저트", code: "디저트" },
+];
 
 function NearbyPage() {
     const navigate = useNavigate();
@@ -13,29 +26,33 @@ function NearbyPage() {
     const [targetLocation, setTargetLocation] = useState(null);
     const [selectedPlace, setSelectedPlace] = useState(null);
 
+    // ★ [추가 2] 카테고리 선택 상태
+    const [selectedCategory, setSelectedCategory] = useState("");
+
     const [showRoulette, setShowRoulette] = useState(false);
     const [rouletteText, setRouletteText] = useState("❓");
     const [isSpinning, setIsSpinning] = useState(false);
     const [winner, setWinner] = useState(null);
     const intervalRef = useRef(null);
 
+    // 마지막 검색 중심 좌표 저장 (카테고리 바꿀 때 이 위치 기준 검색)
+    const lastCenterRef = useRef(null);
+
     // 앱 접속 여부 판단
     const [isApp, setIsApp] = useState(false);
     useEffect(() => {
-        // 이름표(User-Agent)를 확인하여 앱 여부 판별
         const ua = window.navigator.userAgent;
         if (ua.indexOf('MealWikiApp') !== -1 || !!window.ReactNativeWebView) {
             setIsApp(true);
         }
     }, []);
 
-    // ★ [핵심] 맛집 검색 함수 (안전하게 로드 후 실행)
-    const searchPlaces = (lat, lng) => {
+    // ★ [수정] 맛집 검색 함수 (카테고리 인자 추가)
+    const searchPlaces = (lat, lng, category = selectedCategory) => {
         if (!window.kakao) return;
 
-        // load 콜백 안에서 services 라이브러리 사용
         window.kakao.maps.load(() => {
-            if (!window.kakao.maps.services) return; // 방어 코드
+            if (!window.kakao.maps.services) return;
 
             const ps = new window.kakao.maps.services.Places();
             const searchOptions = {
@@ -44,37 +61,64 @@ function NearbyPage() {
                 sort: window.kakao.maps.services.SortBy.DISTANCE
             };
 
-            setPlaces([]); // 기존 데이터 초기화
+            // 검색 시작 전 중심 좌표 저장
+            lastCenterRef.current = { lat, lng };
 
-            ps.categorySearch('FD6', (data, status, pagination) => {
+            setPlaces([]); // 기존 마커 초기화
+
+            const placesCallback = (data, status, pagination) => {
                 if (status === window.kakao.maps.services.Status.OK) {
                     setPlaces(prev => [...prev, ...data]);
                     if (pagination.hasNextPage && pagination.current < 3) {
                         pagination.nextPage();
                     }
+                } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
+                    // 검색 결과가 없을 때 (조용히 넘어감 or 처리)
+                    // setPlaces([]); // 이미 초기화 했으므로 생략 가능
                 }
-            }, searchOptions);
+            };
+
+            // ★ [핵심 로직] 카테고리 유무에 따라 검색 방식 분기
+            if (category) {
+                // 특정 카테고리 선택 시: 키워드 검색 (예: 내 위치 주변 '한식')
+                ps.keywordSearch(category, placesCallback, searchOptions);
+            } else {
+                // 전체 선택 시: 카테고리 검색 (FD6 = 음식점)
+                ps.categorySearch('FD6', placesCallback, searchOptions);
+            }
         });
     };
 
-    // 내 위치 잡히면 검색 시작
+    // 1. 내 위치 잡히면 초기 검색
     useEffect(() => {
         if (myLoc.loaded) {
-            searchPlaces(myLoc.lat, myLoc.lng);
+            searchPlaces(myLoc.lat, myLoc.lng, selectedCategory);
         }
-    }, [myLoc.loaded]);
+    }, [myLoc.loaded]); // 초기 로딩 시에만
 
-    // 지도 움직임 멈추면 재검색
+    // 2. 지도 움직임 멈추면 재검색 (현재 선택된 카테고리 유지)
     const handleMapIdle = (newLat, newLng) => {
         if (isSpinning || showRoulette) return;
-        searchPlaces(newLat, newLng);
+        searchPlaces(newLat, newLng, selectedCategory);
+    };
+
+    // ★ [추가 3] 카테고리 변경 핸들러
+    const handleCategoryChange = (code) => {
+        setSelectedCategory(code);
+        
+        // 현재 지도의 중심 기준으로 즉시 재검색
+        if (lastCenterRef.current) {
+            searchPlaces(lastCenterRef.current.lat, lastCenterRef.current.lng, code);
+        } else if (myLoc.loaded) {
+            searchPlaces(myLoc.lat, myLoc.lng, code);
+        }
     };
 
     const handleMarkerClick = (place) => {
-        setSelectedPlace(place); // 마커를 누르면 선택된 장소 정보를 담아 모달을 띄움
+        setSelectedPlace(place);
     };
 
-    // 룰렛 로직 (변경 없음)
+    // 룰렛 로직
     const startRoulette = () => {
         if (places.length === 0) return alert("주변에 식당이 없어요 ㅠㅠ");
 
@@ -94,7 +138,6 @@ function NearbyPage() {
             const finalIdx = Math.floor(Math.random() * places.length);
             const selectedPlace = places[finalIdx];
 
-            // ★ [수정] 백엔드 DTO 구조에 맞게 객체 형태로 전송
             try {
                 const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5068';
                 await axios.post(
@@ -132,6 +175,39 @@ function NearbyPage() {
         <div className="page-container">
             <h1 className="title text-center">📍 내 주변 맛집</h1>
 
+            {/* ★ [추가 4] 가로 스크롤 카테고리바 (지도 바로 위) */}
+            <div style={{ 
+                marginBottom: '10px', 
+                overflowX: 'auto', 
+                whiteSpace: 'nowrap', 
+                paddingBottom: '5px',
+                display: 'flex',
+                gap: '8px'
+            }} className="hide-scrollbar">
+                <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+                
+                {FOOD_CATEGORIES.map((cat) => (
+                    <button
+                        key={cat.name}
+                        onClick={() => handleCategoryChange(cat.code)}
+                        style={{
+                            padding: '8px 16px',
+                            borderRadius: '20px',
+                            border: '1px solid #ddd',
+                            fontSize: '14px',
+                            backgroundColor: selectedCategory === cat.code ? '#FF5722' : 'white',
+                            color: selectedCategory === cat.code ? 'white' : '#555',
+                            fontWeight: selectedCategory === cat.code ? 'bold' : 'normal',
+                            cursor: 'pointer',
+                            flexShrink: 0, // 버튼 찌그러짐 방지
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        {cat.name}
+                    </button>
+                ))}
+            </div>
+
             <div style={{ width: '100%', height: '400px', position: 'relative' }}>
                 {!myLoc.loaded ? (
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', background: '#f0f0f0' }}>
@@ -146,15 +222,14 @@ function NearbyPage() {
                     />
                 )}
 
-                {!showRoulette && places.length > 0 && (
+                {!showRoulette && places.length >= 0 && (
                     <div style={{ position: 'absolute', bottom: '15px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'white', padding: '8px 16px', borderRadius: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', zIndex: 10, fontSize: '12px', fontWeight: 'bold', color: '#555', whiteSpace: 'nowrap' }}>
-                        현재 검색된 식당: {places.length}개 🍽️
+                        {selectedCategory ? `'${selectedCategory}'` : '전체'} 검색 결과: {places.length}개 🍽️
                     </div>
                 )}
             </div>
 
-
-            {/* ★ 마커 클릭 시 나타나는 선택 모달 */}
+            {/* 마커 선택 모달 */}
             {selectedPlace && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
@@ -172,7 +247,6 @@ function NearbyPage() {
                             어디로 이동할까요?
                         </p>
 
-                        {/* 1. 카카오 지도 (강조형) */}
                         <button
                             onClick={() => window.open(`https://place.map.kakao.com/${selectedPlace.id}`, '_blank')}
                             style={{
@@ -185,7 +259,6 @@ function NearbyPage() {
                             💛 카카오 지도 리뷰 보기
                         </button>
 
-                        {/* 2. 내 wikipost (보조형) */}
                         <button
                             onClick={() => navigate(`/wiki/${selectedPlace.id}`, { state: { ...selectedPlace } })}
                             style={{
@@ -208,7 +281,9 @@ function NearbyPage() {
             )}
 
             <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                <p style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>너무 많아서 못 고르겠다면?</p>
+                <p style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>
+                    {selectedCategory ? `${selectedCategory} 중에서 못 고르겠다면?` : '너무 많아서 못 고르겠다면?'}
+                </p>
                 <button
                     onClick={startRoulette}
                     className="btn-primary"
@@ -222,19 +297,17 @@ function NearbyPage() {
                 </button>
             </div>
 
-
-            {/* ▼▼▼ [추가된 코드] 검색 결과 리스트 (App.jsx 스타일 적용) ▼▼▼ */}
+            {/* 리스트 영역 */}
             <div style={{ marginTop: '30px' }}>
                 <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px', paddingLeft: '5px' }}>
-                    📋 주변 식당 목록 ({places.length})
+                    📋 주변 {selectedCategory || '식당'} 목록 ({places.length})
                 </h2>
 
                 {places.map((place, index) => (
                     <div key={place.id}>
-                        {/* App.jsx와 동일한 클래스(restaurant-card) 사용 */}
                         <div
                             className="restaurant-card"
-                            onClick={() => handleMarkerClick(place)} // 클릭 시 모달 띄우기 재사용
+                            onClick={() => handleMarkerClick(place)}
                             style={{ cursor: 'pointer' }}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -244,13 +317,11 @@ function NearbyPage() {
                                 <span style={{ color: '#ccc' }}>›</span>
                             </div>
                             <div className="sub-text">📍 {place.road_address_name || place.address_name}</div>
-                            {/* 카테고리 정보가 길 경우를 대비해 마지막 단어만 보여주거나 그대로 출력 */}
                             <div className="category-badge">
                                 {place.category_name ? place.category_name.split('>').pop().trim() : '맛집'}
                             </div>
                         </div>
 
-                        {/* 리스트 사이사이 광고 (App.jsx 로직과 동일) */}
                         {(index + 1) % 5 === 0 && (
                             <div style={{ margin: '20px 0' }}>
                                 <AdSenseUnit
@@ -264,13 +335,11 @@ function NearbyPage() {
                     </div>
                 ))}
             </div>
-            {/* ▲▲▲ [여기까지 추가] ▲▲▲ */}
 
-
-
-            {/* [배치 2] 중간 광고: 지도와 룰렛 버튼 사이 */}
+            {/* 중간 광고 */}
             <AdSenseUnit isApp={isApp} slotId="1571207047" />
 
+            {/* 룰렛 모달 */}
             {showRoulette && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
@@ -295,7 +364,6 @@ function NearbyPage() {
                                     {winner.road_address_name || winner.address_name}
                                 </div>
 
-                                {/* 강조된 버튼: 카카오 지도 */}
                                 <button
                                     onClick={() => window.open(`https://place.map.kakao.com/${winner.id}`, '_blank')}
                                     style={{
@@ -308,7 +376,6 @@ function NearbyPage() {
                                     💛 카카오 지도 리뷰 보기
                                 </button>
 
-                                {/* 보조 버튼: MealWiki 상세정보 */}
                                 <button
                                     onClick={() => navigate(`/wiki/${winner.id}`, { state: { name: winner.place_name, ...winner } })}
                                     style={{
@@ -332,7 +399,6 @@ function NearbyPage() {
                     </div>
                 </div>
             )}
-
         </div>
     );
 }
