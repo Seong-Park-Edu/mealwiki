@@ -80,7 +80,7 @@ function DbMapPage() {
         fetchDbRestaurants();
     }, []);
 
-// 4. 태그 필터링 로직 (수정됨)
+    // 4. 태그 필터링 로직 (수정됨)
     const handleTagClick = async (tag) => {
         // ★ [수정 포인트] 
         // 1. '전체' 버튼(null)을 눌렀거나
@@ -93,10 +93,10 @@ function DbMapPage() {
 
         // 3. 새로운 태그 선택 시 로직 시작
         setSelectedTag(tag);
-        
+
         try {
             const allIds = dbRestaurants.map(r => r.id);
-            
+
             // 서버에 필터링 요청 (이제 tag가 null일 때 여기로 오지 않으므로 에러 안 남)
             const res = await axios.post(`${apiUrl}/api/wiki/filter-by-tag`, {
                 restaurantIds: allIds,
@@ -268,11 +268,6 @@ function DbMapPage() {
                 </div>
             </div>
 
-            {/* 하단 광고 */}
-            <div style={{ padding: '10px 0', textAlign: 'center', backgroundColor: '#f9f9f9' }}>
-                <AdSenseUnit isApp={isApp} slotId="1188063662" />
-            </div>
-
             {/* 식당 선택 모달 */}
             {selectedRestaurant && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }} onClick={() => setSelectedRestaurant(null)}>
@@ -290,6 +285,11 @@ function DbMapPage() {
                     </div>
                 </div>
             )}
+
+            {/* 하단 광고 */}
+            <div style={{ padding: '10px 0', textAlign: 'center', backgroundColor: '#f9f9f9' }}>
+                <AdSenseUnit isApp={isApp} slotId="1188063662" />
+            </div>
             <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
         </div>
     );
