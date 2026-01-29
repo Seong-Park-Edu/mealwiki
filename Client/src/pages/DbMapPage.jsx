@@ -272,9 +272,9 @@ function DbMapPage() {
             </div>
 
             {/* 하단 광고 */}
-            <div style={{ padding: '10px 0', textAlign: 'center', backgroundColor: '#f9f9f9' }}>
+            {/* <div style={{ padding: '10px 0', textAlign: 'center', backgroundColor: '#f9f9f9' }}>
                 <AdSenseUnit isApp={isApp} slotId="1188063662" />
-            </div>
+            </div> */}
 
             {/* 식당 선택 모달 */}
             {selectedRestaurant && (
