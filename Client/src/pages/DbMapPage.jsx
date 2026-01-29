@@ -231,7 +231,8 @@ function DbMapPage() {
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '20px 20px 20px 20px'
+                padding: '20px 20px 20px 20px',
+                minHeight: '400px' // ★ [핵심] Flex가 망가져도 최소 400px은 확보해라!
             }}>
                 <div style={{
                     flex: 1,
@@ -241,7 +242,8 @@ function DbMapPage() {
                     borderRadius: '20px',
                     overflow: 'hidden',
                     boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
-                    border: '1px solid #f0f0f0'
+                    border: '1px solid #f0f0f0',
+                    minHeight: '100%' // ★ 내부 컨테이너도 부모 높이를 꽉 채우도록
                 }}>
                     {loading ? (
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -272,9 +274,9 @@ function DbMapPage() {
             </div>
 
             {/* 하단 광고 */}
-            {/* <div style={{ padding: '10px 0', textAlign: 'center', backgroundColor: '#f9f9f9' }}>
-                <AdSenseUnit isApp={isApp} slotId="1188063662" />
-            </div> */}
+            <div style={{ padding: '10px 0', textAlign: 'center', backgroundColor: '#f9f9f9' }}>
+                <AdSenseUnit isApp={isApp} slotId="1571207047" />
+            </div>
 
             {/* 식당 선택 모달 */}
             {selectedRestaurant && (
