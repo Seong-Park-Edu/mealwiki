@@ -135,6 +135,14 @@ function DbMapPage() {
 
                 const zoomControl = new window.kakao.maps.ZoomControl();
                 map.addControl(zoomControl, window.kakao.maps.ControlPosition.RIGHT);
+
+                // ★ [추가] 지도가 생성된 후 0.5초 뒤에 강제로 사이즈를 다시 맞춥니다.
+                // 광고 때문에 레이아웃이 밀렸을 때를 대비한 안전장치입니다.
+                setTimeout(() => {
+                    map.relayout();
+                    map.setCenter(new window.kakao.maps.LatLng(myLocation.lat, myLocation.lng));
+                }, 500);
+                
             });
         };
 
@@ -225,41 +233,45 @@ function DbMapPage() {
                 </div>
             </div>
 
-            {/* 2. 지도 영역 */}
+{/* 2. 지도 영역 (절대 위치로 변경) */}
             <div style={{
                 flex: 1,
-                position: 'relative',
-                display: 'flex',
-                flexDirection: 'column',
-                padding: '20px 20px 20px 20px',
-                minHeight: '600px' // ★ [핵심] Flex가 망가져도 최소 400px은 확보해라!
+                position: 'relative', // 부모는 기준점
+                width: '100%',
+                minHeight: '400px',   // 최소 높이 확보
+                backgroundColor: '#f9f9f9' // 배경색 추가
             }}>
+                {/* ★ [핵심] position: absolute로 변경 
+                    Flex 구조와 상관없이 무조건 부모 안에서 꽉 차게 만듭니다.
+                */}
                 <div style={{
-                    flex: 1,
-                    width: '100%',
-                    position: 'relative',
+                    position: 'absolute', 
+                    top: '20px', 
+                    left: '20px', 
+                    right: '20px', 
+                    bottom: '20px', // 아래쪽 여백
                     backgroundColor: 'white',
                     borderRadius: '20px',
                     overflow: 'hidden',
                     boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
                     border: '1px solid #f0f0f0',
-                    minHeight: '100%' // ★ 내부 컨테이너도 부모 높이를 꽉 채우도록
+                    zIndex: 1 // 광고보다 위에 오도록
                 }}>
                     {loading ? (
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                             데이터 로딩 중... ⏳
                         </div>
                     ) : (
-                        // ★ [중요] mapContainer ref가 달린 div는 무조건 렌더링 되어야 함
+                        // mapContainer는 width/height 100% 필수
                         <div ref={mapContainer} style={{ width: '100%', height: '100%' }}></div>
                     )}
 
-                    {/* 내 위치 찾기 버튼 */}
+                    {/* 내 위치 찾기 버튼 (그대로 유지) */}
                     <button
                         onClick={findMyLocation}
                         disabled={isFindingLocation}
                         style={{
-                            position: 'absolute', bottom: '50px', right: '35px', zIndex: 20,
+                            position: 'absolute', bottom: '20px', right: '15px', zIndex: 20,
                             backgroundColor: 'white', border: '1px solid #eee', borderRadius: '50%',
                             width: '45px', height: '45px', fontSize: '22px', cursor: 'pointer',
                             boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center'
