@@ -82,22 +82,16 @@ function DbMapPage() {
 
     // 4. 태그 필터링 로직 (수정됨)
     const handleTagClick = async (tag) => {
-        // ★ [수정 포인트] 
-        // 1. '전체' 버튼(null)을 눌렀거나
-        // 2. 이미 선택된 태그를 다시 눌러서 취소하는 경우
         if (tag === null || selectedTag === tag) {
             setSelectedTag(null);
             setFilteredRestaurants(dbRestaurants); // 원본 데이터로 복구
-            return; // ★ 여기서 함수를 끝내서 API 요청을 막습니다!
+            return; 
         }
 
-        // 3. 새로운 태그 선택 시 로직 시작
         setSelectedTag(tag);
-
+        
         try {
             const allIds = dbRestaurants.map(r => r.id);
-
-            // 서버에 필터링 요청 (이제 tag가 null일 때 여기로 오지 않으므로 에러 안 남)
             const res = await axios.post(`${apiUrl}/api/wiki/filter-by-tag`, {
                 restaurantIds: allIds,
                 targetTag: tag
@@ -112,29 +106,41 @@ function DbMapPage() {
             }
         } catch (e) {
             console.error("태그 필터링 실패", e);
-            // 에러가 나도 사용자 경험을 위해 전체 목록을 보여주거나 유지
-            // setFilteredRestaurants(dbRestaurants); 
         }
     };
 
-    // 3. 지도 그리기 (초기 1회)
+    // ★ [핵심 수정] 3. 지도 그리기 (재시도 로직 추가)
     useEffect(() => {
-        if (loading || !window.kakao || mapInstance) return;
+        // 데이터 로딩 중이거나 이미 지도가 있으면 패스
+        if (loading || mapInstance) return;
 
-        window.kakao.maps.load(() => {
-            const options = {
-                center: new window.kakao.maps.LatLng(myLocation.lat, myLocation.lng),
-                level: 5
-            };
-            const map = new window.kakao.maps.Map(mapContainer.current, options);
-            map.setZoomable(true);
-            map.setDraggable(true);
-            setMapInstance(map);
+        // 지도를 그리는 함수 정의
+        const initMap = () => {
+            // mapContainer가 아직 렌더링 안 됐거나, kakao 스크립트가 없으면 재시도
+            if (!mapContainer.current || !window.kakao || !window.kakao.maps) {
+                // 0.1초 뒤에 다시 시도 (스크립트 로딩 대기)
+                setTimeout(initMap, 100);
+                return;
+            }
 
-            const zoomControl = new window.kakao.maps.ZoomControl();
-            map.addControl(zoomControl, window.kakao.maps.ControlPosition.RIGHT);
-        });
-    }, [loading]);
+            window.kakao.maps.load(() => {
+                const options = {
+                    center: new window.kakao.maps.LatLng(myLocation.lat, myLocation.lng),
+                    level: 5
+                };
+                const map = new window.kakao.maps.Map(mapContainer.current, options);
+                map.setZoomable(true);
+                map.setDraggable(true);
+                setMapInstance(map);
+
+                const zoomControl = new window.kakao.maps.ZoomControl();
+                map.addControl(zoomControl, window.kakao.maps.ControlPosition.RIGHT);
+            });
+        };
+
+        initMap(); // 지도 그리기 시작
+
+    }, [loading]); // loading이 false가 될 때 실행
 
     // 4. 마커 찍기 (데이터가 바뀌면 기존 마커 지우고 다시 찍기)
     useEffect(() => {
@@ -159,7 +165,6 @@ function DbMapPage() {
             });
             marker.setMap(mapInstance);
 
-            // 생성된 마커를 ref에 저장 (나중에 지우기 위해)
             markersRef.current.push(marker);
 
             window.kakao.maps.event.addListener(marker, 'click', () => {
@@ -168,7 +173,7 @@ function DbMapPage() {
             });
         });
 
-    }, [mapInstance, filteredRestaurants]); // ★ 의존성이 filteredRestaurants로 변경됨
+    }, [mapInstance, filteredRestaurants]);
 
     return (
         <div className="page-container" style={{ height: '100vh', display: 'flex', flexDirection: 'column', padding: 0, backgroundColor: '#f9f9f9' }}>
@@ -179,17 +184,16 @@ function DbMapPage() {
                     {selectedTag ? `'${selectedTag}' 검색 결과: ${filteredRestaurants.length}개` : `유저들이 등록한 맛집 ${dbRestaurants.length}곳`}
                 </p>
 
-                {/* ★ [추가 5] 가로 스크롤 태그 필터 바 */}
+                {/* 태그바 */}
                 <div style={{
                     display: 'flex',
                     gap: '8px',
                     overflowX: 'auto',
                     whiteSpace: 'nowrap',
                     paddingBottom: '10px',
-                    scrollbarWidth: 'none', // 파이어폭스 스크롤바 숨김
-                    msOverflowStyle: 'none' // IE 스크롤바 숨김
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none'
                 }} className="hide-scrollbar">
-                    {/* 스크롤바 숨기기 스타일 */}
                     <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
 
                     <button
@@ -198,7 +202,7 @@ function DbMapPage() {
                             padding: '6px 12px', borderRadius: '20px', fontSize: '13px', border: '1px solid #ddd',
                             backgroundColor: selectedTag === null ? '#333' : 'white',
                             color: selectedTag === null ? 'white' : '#555',
-                            flexShrink: 0 // 버튼 찌그러짐 방지
+                            flexShrink: 0
                         }}
                     >
                         전체
@@ -227,7 +231,6 @@ function DbMapPage() {
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
-                // ★ [핵심 1] 여기에 여백(padding)을 줍니다. (상단 0, 좌우하단 20px)
                 padding: '20px 20px 20px 20px'
             }}>
                 <div style={{
@@ -235,17 +238,17 @@ function DbMapPage() {
                     width: '100%',
                     position: 'relative',
                     backgroundColor: 'white',
-                    // ★ [핵심 2] 모서리를 둥글게 깎고 그림자를 줍니다.
                     borderRadius: '20px',
-                    overflow: 'hidden', // 지도가 둥근 모서리 밖으로 튀어나가지 않게 자름
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.08)', // 살짝 그림자 추가
-                    border: '1px solid #f0f0f0' // 얇은 테두리
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
+                    border: '1px solid #f0f0f0'
                 }}>
                     {loading ? (
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                             데이터 로딩 중... ⏳
                         </div>
                     ) : (
+                        // ★ [중요] mapContainer ref가 달린 div는 무조건 렌더링 되어야 함
                         <div ref={mapContainer} style={{ width: '100%', height: '100%' }}></div>
                     )}
 
@@ -268,6 +271,11 @@ function DbMapPage() {
                 </div>
             </div>
 
+            {/* 하단 광고 */}
+            <div style={{ padding: '10px 0', textAlign: 'center', backgroundColor: '#f9f9f9' }}>
+                <AdSenseUnit isApp={isApp} slotId="1188063662" />
+            </div>
+
             {/* 식당 선택 모달 */}
             {selectedRestaurant && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }} onClick={() => setSelectedRestaurant(null)}>
@@ -285,11 +293,6 @@ function DbMapPage() {
                     </div>
                 </div>
             )}
-
-            {/* 하단 광고 */}
-            <div style={{ padding: '10px 0', textAlign: 'center', backgroundColor: '#f9f9f9' }}>
-                <AdSenseUnit isApp={isApp} slotId="1188063662" />
-            </div>
             <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
         </div>
     );
