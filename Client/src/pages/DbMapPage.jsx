@@ -232,7 +232,7 @@ function DbMapPage() {
                 display: 'flex',
                 flexDirection: 'column',
                 padding: '20px 20px 20px 20px',
-                minHeight: '400px' // ★ [핵심] Flex가 망가져도 최소 400px은 확보해라!
+                minHeight: '600px' // ★ [핵심] Flex가 망가져도 최소 400px은 확보해라!
             }}>
                 <div style={{
                     flex: 1,
