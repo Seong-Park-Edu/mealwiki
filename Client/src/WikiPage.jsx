@@ -322,10 +322,11 @@ function WikiPage() {
             </div>
 
             {/* 2. 액션 버튼 */}
-            <div className="action-buttons">
+            <div className="action-buttons" style={{ marginBottom: '20px' }}>
                 <button onClick={handleBookmark} className={`btn-action ${isBookmarked ? 'active' : ''}`}>{isBookmarked ? '❤️' : '🤍'} 찜하기</button>
                 <button onClick={handleAck} className="btn-action" style={{ color: '#E65100' }}>🔥 인정하기</button>
             </div>
+
 
             {/* 3. 태그 */}
             <div className="restaurant-card">
