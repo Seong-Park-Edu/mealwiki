@@ -14,6 +14,7 @@ function NavBar({ isLoggedIn }) {
         <Link to="/decision" className={isActive('/decision')}>⚖️ 할래말래</Link>
         <Link to="/fortune" className={isActive('/fortune')}>🔮 운세</Link>
         <Link to="/nearby" className={isActive('/nearby')}>📍 주변</Link>
+        <Link to="/game/survival" className={isActive('/game/survival')}>🕹️ 게임</Link>
         <Link to="/our-map" className={isActive('/our-map')}>🗺️ 찐맛집</Link>
         <Link to="/roulette" className={isActive('/roulette')}>🎰 룰렛</Link>
         <Link to="/group" className={isActive('/group')}>🤝 뭐먹</Link>
