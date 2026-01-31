@@ -32,6 +32,7 @@ const ParticleSurvivalPage = () => {
     const lastTimeRef = useRef(0);
     const playerRef = useRef({ x: 200, y: 300, radius: 8 });
     const particlesRef = useRef([]);
+    const lastTouchRef = useRef({ x: 0, y: 0 }); // 마지막 터치 위치 저장용
 
     // 화면 크기
     const CANVAS_WIDTH = Math.min(window.innerWidth - 60, 400);
@@ -365,47 +366,64 @@ const ParticleSurvivalPage = () => {
         }
     };
 
+    // ★ [신규 추가] 터치 시작 시 좌표 초기화
+    const handleTouchStart = (e) => {
+        if (e.touches && e.touches.length > 0) {
+            lastTouchRef.current = {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY
+            };
+        }
+    };
+
     // 터치 시 손가락 위로 띄울 간격 (픽셀)
     const TOUCH_OFFSET_Y = 80;
 
+    // ★ [수정] 트랙패드 방식의 입력 핸들러
     const handleInput = (e) => {
         if (gameState !== 'playing') return;
 
         const canvas = canvasRef.current;
         const rect = canvas.getBoundingClientRect();
 
+        // 화면 비율 계산
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
 
-        let clientX, clientY;
-        let isTouch = false; // 터치 여부 확인 플래그
-
+        // 1. 터치 조작 (상대 좌표 이동)
         if (e.type.includes('touch')) {
             if (!e.touches || e.touches.length === 0) return;
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-            isTouch = true; // 터치 이벤트임
-        } else {
-            clientX = e.clientX;
-            clientY = e.clientY;
+
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+
+            // 이동한 거리 계산 (현재 좌표 - 이전 좌표)
+            const deltaX = (currentX - lastTouchRef.current.x) * scaleX; // 감도 조절하려면 뒤에 * 1.2 등 추가
+            const deltaY = (currentY - lastTouchRef.current.y) * scaleY;
+
+            // 플레이어 위치 업데이트
+            let newX = playerRef.current.x + deltaX;
+            let newY = playerRef.current.y + deltaY;
+
+            // 화면 밖 제한
+            const radius = playerRef.current.radius;
+            newX = Math.max(radius, Math.min(newX, CANVAS_WIDTH - radius));
+            newY = Math.max(radius, Math.min(newY, CANVAS_HEIGHT - radius));
+
+            playerRef.current = { ...playerRef.current, x: newX, y: newY };
+
+            // 현재 위치를 '이전 위치'로 갱신
+            lastTouchRef.current = { x: currentX, y: currentY };
         }
-
-        // 캔버스 내부 좌표로 변환 (스케일 적용)
-        let x = (clientX - rect.left) * scaleX;
-        let y = (clientY - rect.top) * scaleY;
-
-        // ★ [핵심 수정] 터치일 경우에만 Y좌표를 위로 올림
-        if (isTouch) {
-            y = y - TOUCH_OFFSET_Y;
+        // 2. 마우스 조작 (기존과 동일하게 절대 좌표 유지 - PC에서는 이게 편함)
+        else {
+            let x = (e.clientX - rect.left) * scaleX;
+            let y = (e.clientY - rect.top) * scaleY;
+            const radius = playerRef.current.radius;
+            x = Math.max(radius, Math.min(x, CANVAS_WIDTH - radius));
+            y = Math.max(radius, Math.min(y, CANVAS_HEIGHT - radius));
+            playerRef.current = { ...playerRef.current, x, y };
         }
-
-        // 화면 밖으로 못 나가게 제한 (반지름만큼 여유 둠)
-        // 위로 띄웠을 때 화면 밖으로 나가는 것 방지
-        const radius = playerRef.current.radius;
-        x = Math.max(radius, Math.min(x, CANVAS_WIDTH - radius));
-        y = Math.max(radius, Math.min(y, CANVAS_HEIGHT - radius));
-
-        playerRef.current = { ...playerRef.current, x, y };
     };
 
     function distToSegment(p, v, w) {
@@ -451,6 +469,7 @@ const ParticleSurvivalPage = () => {
                     ref={canvasRef}
                     width={CANVAS_WIDTH}
                     height={CANVAS_HEIGHT}
+                    onTouchStart={handleTouchStart}
                     onMouseMove={handleInput}
                     onTouchMove={handleInput}
                     style={{
