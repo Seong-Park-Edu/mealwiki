@@ -365,6 +365,9 @@ const ParticleSurvivalPage = () => {
         }
     };
 
+    // 터치 시 손가락 위로 띄울 간격 (픽셀)
+    const TOUCH_OFFSET_Y = 80;
+
     const handleInput = (e) => {
         if (gameState !== 'playing') return;
 
@@ -375,21 +378,32 @@ const ParticleSurvivalPage = () => {
         const scaleY = canvas.height / rect.height;
 
         let clientX, clientY;
+        let isTouch = false; // 터치 여부 확인 플래그
 
         if (e.type.includes('touch')) {
             if (!e.touches || e.touches.length === 0) return;
             clientX = e.touches[0].clientX;
             clientY = e.touches[0].clientY;
+            isTouch = true; // 터치 이벤트임
         } else {
             clientX = e.clientX;
             clientY = e.clientY;
         }
 
+        // 캔버스 내부 좌표로 변환 (스케일 적용)
         let x = (clientX - rect.left) * scaleX;
         let y = (clientY - rect.top) * scaleY;
 
-        x = Math.max(8, Math.min(x, CANVAS_WIDTH - 8));
-        y = Math.max(8, Math.min(y, CANVAS_HEIGHT - 8));
+        // ★ [핵심 수정] 터치일 경우에만 Y좌표를 위로 올림
+        if (isTouch) {
+            y = y - TOUCH_OFFSET_Y;
+        }
+
+        // 화면 밖으로 못 나가게 제한 (반지름만큼 여유 둠)
+        // 위로 띄웠을 때 화면 밖으로 나가는 것 방지
+        const radius = playerRef.current.radius;
+        x = Math.max(radius, Math.min(x, CANVAS_WIDTH - radius));
+        y = Math.max(radius, Math.min(y, CANVAS_HEIGHT - radius));
 
         playerRef.current = { ...playerRef.current, x, y };
     };
