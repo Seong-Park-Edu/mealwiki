@@ -37,9 +37,11 @@ const FortuneLunchPage = () => {
   const [mealType, setMealType] = useState('점심');
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
-  
+
   // 초기값 00:00 설정
   const [birthTime, setBirthTime] = useState('00:00');
+  // ★ [추가] 시간 모름 체크 상태
+  const [isTimeUnknown, setIsTimeUnknown] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -63,6 +65,8 @@ const FortuneLunchPage = () => {
         if (parsed.birthTime) setBirthTime(parsed.birthTime);
         if (parsed.gender) setGender(parsed.gender);
         if (parsed.mealType) setMealType(parsed.mealType);
+        // ★ [추가] 모름 상태 복구
+        if (parsed.isTimeUnknown !== undefined) setIsTimeUnknown(parsed.isTimeUnknown);
       } catch (e) { }
     }
   }, []);
@@ -100,9 +104,12 @@ const FortuneLunchPage = () => {
     if (!name.trim()) return alert("이름을 입력해주세요!");
     if (!birthDate || !birthTime) return alert("생년월일과 시간을 모두 입력해주세요!");
 
-    const userData = { name, birthDate, birthTime, gender, mealType };
-    localStorage.setItem('fortune_user_data', JSON.stringify(userData));
+    // 시간 모름이 아닐 때만 시간 입력 확인 (모름이면 00:00으로 자동 처리되므로 패스)
+    if (!isTimeUnknown && !birthTime) return alert("태어난 시간을 입력해주세요!");
 
+    // ★ [수정] 저장 시 isTimeUnknown 포함
+    const userData = { name, birthDate, birthTime, gender, mealType, isTimeUnknown };
+    localStorage.setItem('fortune_user_data', JSON.stringify(userData));
     if (isApp) {
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'SHOW_REWARD_AD' }));
       setTimeout(() => {
@@ -190,6 +197,15 @@ const FortuneLunchPage = () => {
       setBirthTime(`${value}:${currentMinute}`);
     } else {
       setBirthTime(`${currentHour}:${value}`);
+    }
+  };
+
+  // ★ [추가] 시간 모름 체크 핸들러
+  const handleUnknownTimeChange = (e) => {
+    const checked = e.target.checked;
+    setIsTimeUnknown(checked);
+    if (checked) {
+      setBirthTime('00:00'); // 모름 체크 시 00:00으로 강제 설정
     }
   };
 
@@ -294,32 +310,61 @@ const FortuneLunchPage = () => {
             />
           </div>
 
-          {/* ★ [수정됨] 태어난 시간 입력 (시/분 분리) */}
+          {/* ★ [수정됨] 태어난 시간 입력 (시/분 분리 & 모름 체크박스) */}
           <div style={{ marginBottom: '30px' }}>
-            <label className="sub-text" style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px' }}>
-              태어난 시간
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <label className="sub-text" style={{ fontWeight: 'bold', display: 'block' }}>
+                태어난 시간
+              </label>
+              {/* ★ 시간 모름 체크박스 */}
+              <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: '#666', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={isTimeUnknown}
+                  onChange={handleUnknownTimeChange}
+                  style={{ marginRight: '5px', width: '16px', height: '16px', accentColor: 'var(--primary)' }}
+                />
+                시간 모름
+              </label>
+            </div>
+
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               {/* 시(Hour) 선택 */}
               <select
                 value={birthTime.split(':')[0]}
                 onChange={(e) => handleTimeChange('hour', e.target.value)}
-                className="wiki-textarea" // 기존 스타일 재활용
-                style={{ flex: 1, textAlign: 'center', appearance: 'none', cursor: 'pointer' }}
+                disabled={isTimeUnknown} // 모름 체크 시 비활성화
+                className="wiki-textarea"
+                style={{
+                  flex: 1,
+                  textAlign: 'center',
+                  appearance: 'none',
+                  cursor: isTimeUnknown ? 'not-allowed' : 'pointer',
+                  backgroundColor: isTimeUnknown ? '#f5f5f5' : '#fff', // 비활성화 시 회색 배경
+                  color: isTimeUnknown ? '#aaa' : '#000'
+                }}
               >
                 {hours.map((h) => (
                   <option key={h} value={h}>{h}시</option>
                 ))}
               </select>
 
-              <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#555' }}>:</span>
+              <span style={{ fontSize: '18px', fontWeight: 'bold', color: isTimeUnknown ? '#ccc' : '#555' }}>:</span>
 
               {/* 분(Minute) 선택 */}
               <select
                 value={birthTime.split(':')[1]}
                 onChange={(e) => handleTimeChange('minute', e.target.value)}
-                className="wiki-textarea" // 기존 스타일 재활용
-                style={{ flex: 1, textAlign: 'center', appearance: 'none', cursor: 'pointer' }}
+                disabled={isTimeUnknown} // 모름 체크 시 비활성화
+                className="wiki-textarea"
+                style={{
+                  flex: 1,
+                  textAlign: 'center',
+                  appearance: 'none',
+                  cursor: isTimeUnknown ? 'not-allowed' : 'pointer',
+                  backgroundColor: isTimeUnknown ? '#f5f5f5' : '#fff', // 비활성화 시 회색 배경
+                  color: isTimeUnknown ? '#aaa' : '#000'
+                }}
               >
                 {minutes.map((m) => (
                   <option key={m} value={m}>{m}분</option>
@@ -331,7 +376,7 @@ const FortuneLunchPage = () => {
           <button className="btn-primary" onClick={handleStart} disabled={loading}>
             {loading ? '천기누설 중... ☁️' : (isApp ? '📺 광고 보고 결과받기' : '결과 확인하기')}
           </button>
-          
+
           <AdSenseUnit isApp={isApp} slotId="3598109744" />
         </div>
       )}
