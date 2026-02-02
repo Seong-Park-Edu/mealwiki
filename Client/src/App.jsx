@@ -22,6 +22,7 @@ import GroupRoomPage from './pages/GroupRoomPage';
 import DbMapPage from './pages/DbMapPage'; // ★ 임포트 추가
 import DecisionPage from './pages/DecisionPage';
 import ParticleSurvivalPage from './pages/ParticleSurvivalPage';
+import CommercialMap from './components/CommercialMap';
 
 // 보호된 라우트 (App.jsx에 둬도 괜찮지만, components 폴더로 빼면 더 좋습니다)
 const ProtectedRoute = ({ children }) => {
@@ -107,6 +108,7 @@ function App() {
           <Route path="/logout" element={<LogoutPage />} />
 
           <Route path="/game/survival" element={<ParticleSurvivalPage />} />
+          <Route path="/commercial" element={<CommercialMap />} />
         </Routes>
       </div>
 
