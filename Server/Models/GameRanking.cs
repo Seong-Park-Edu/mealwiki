@@ -1,7 +1,7 @@
+using System;
+using Newtonsoft.Json;
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
-using Newtonsoft.Json;
-using System;
 
 namespace Server.Models
 {
@@ -12,7 +12,7 @@ namespace Server.Models
         public long Id { get; set; }
 
         [Column("nickname")]
-        public string Nickname { get; set; }
+        public required string Nickname { get; set; }
 
         [Column("score")]
         public double Score { get; set; } // 생존 시간 (초)
