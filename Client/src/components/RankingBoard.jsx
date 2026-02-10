@@ -34,10 +34,21 @@ const RankingBoard = ({ refreshTrigger }) => {
         fetchRankings();
     }, [refreshTrigger]);
 
-    // 날짜 포맷팅 함수
+    // 날짜 포맷팅 함수 (KST 변환)
     const formatDate = (dateString) => {
+        if (!dateString) return '-';
         const date = new Date(dateString);
-        return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes() < 10 ? '0' : ''}${date.getMinutes()}`;
+
+        // UTC 시간에서 9시간 더해서 한국 시간(KST)으로 변환
+        // (Date객체의 getTime()은 UTC 기준 밀리초이므로 여기에 9시간을 더함)
+        const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+
+        const month = kstDate.getUTCMonth() + 1;
+        const day = kstDate.getUTCDate();
+        const hour = kstDate.getUTCHours();
+        const minute = kstDate.getUTCMinutes();
+
+        return `${month}/${day} ${hour}:${minute < 10 ? '0' : ''}${minute}`;
     };
 
     return (
@@ -63,7 +74,7 @@ const RankingBoard = ({ refreshTrigger }) => {
                                 </td>
                                 <td style={styles.td}>{rank.nickname}</td>
                                 <td style={{ ...styles.td, fontWeight: 'bold' }}>{rank.score.toFixed(2)}초</td>
-                                <td style={styles.td} className="mobile-hide">{formatDate(rank.created_at)}</td>
+                                <td style={styles.td} className="mobile-hide">{formatDate(rank.createdAt)}</td>
                             </tr>
                         ))}
                         {rankings.length === 0 && (
