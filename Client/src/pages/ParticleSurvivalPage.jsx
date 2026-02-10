@@ -585,7 +585,7 @@ const ParticleSurvivalPage = () => {
                 {gameState === 'ready' && (
                     <div style={overlayStyle}>
                         <h2>준비되셨나요?</h2>
-                        <p>생명은 단 1초입니다!</p>
+                        <p>생명은 단 4초입니다!</p>
                         <button onClick={startGame} style={btnStyle}>게임 시작</button>
                     </div>
                 )}
