@@ -15,7 +15,12 @@ const RankingBoard = ({ refreshTrigger }) => {
             // 로컬 테스트 시: http://localhost:5129/api/gameranking (포트 확인 필요)
             // 배포 시: https://mealwiki.com/api/gameranking
 
-            setRankings(response.data);
+            if (Array.isArray(response.data)) {
+                setRankings(response.data);
+            } else {
+                console.error("Rankings data is invalid:", response.data);
+                setRankings([]);
+            }
         } catch (error) {
             console.error("Failed to fetch rankings:", error);
             // 에러 시 더미 데이터라도 보여줄지 결정
