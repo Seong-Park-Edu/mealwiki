@@ -1,3 +1,6 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import AdSenseUnit from '../components/AdSenseUnit';
 import RankingBoard from '../components/RankingBoard';
 import axios from 'axios';
 
