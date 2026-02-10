@@ -37,18 +37,30 @@ const RankingBoard = ({ refreshTrigger }) => {
     // 날짜 포맷팅 함수 (KST 변환)
     const formatDate = (dateString) => {
         if (!dateString) return '-';
-        const date = new Date(dateString);
 
-        // UTC 시간에서 9시간 더해서 한국 시간(KST)으로 변환
-        // (Date객체의 getTime()은 UTC 기준 밀리초이므로 여기에 9시간을 더함)
-        const kstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+        // 데이터베이스(UTC) 시간을 정확히 인식하기 위해 보정
+        // (만약 'Z'가 없으면 UTC로 간주하기 위해 추가)
+        const isoString = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
+        const date = new Date(isoString);
 
-        const month = kstDate.getUTCMonth() + 1;
-        const day = kstDate.getUTCDate();
-        const hour = kstDate.getUTCHours();
-        const minute = kstDate.getUTCMinutes();
+        // 한국 시간(KST)으로 변환된 날짜/시간 값 추출
+        const options = {
+            timeZone: 'Asia/Seoul',
+            month: 'numeric',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        };
 
-        return `${month}/${day} ${hour}:${minute < 10 ? '0' : ''}${minute}`;
+        // en-US 로케일을 사용하면 숫자만 깔끔하게 추출 가능 (예: month="2", day="11")
+        const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(date);
+        const month = parts.find(p => p.type === 'month').value;
+        const day = parts.find(p => p.type === 'day').value;
+        const hour = parts.find(p => p.type === 'hour').value;
+        const minute = parts.find(p => p.type === 'minute').value;
+
+        return `${month}/${day} ${hour}:${minute}`;
     };
 
     return (
