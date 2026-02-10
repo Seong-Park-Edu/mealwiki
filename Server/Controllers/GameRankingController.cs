@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
-using Server.Models;
-using Supabase;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Server.Models;
+using Supabase;
 
 namespace Server.Controllers
 {
@@ -26,7 +26,7 @@ namespace Server.Controllers
             {
                 var result = await _supabaseClient
                     .From<GameRanking>()
-                    .Order("score", Postgrest.Constants.Ordering.Descending)
+                    .Order("score", Supabase.Postgrest.Constants.Ordering.Descending)
                     .Limit(10)
                     .Get();
 
@@ -56,9 +56,7 @@ namespace Server.Controllers
                     ranking.Nickname = ranking.Nickname.Substring(0, 10);
                 }
 
-                var response = await _supabaseClient
-                    .From<GameRanking>()
-                    .Insert(ranking);
+                var response = await _supabaseClient.From<GameRanking>().Insert(ranking);
 
                 return Ok(response.Models.FirstOrDefault());
             }
