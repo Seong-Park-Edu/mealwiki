@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Server.Models;
 using Supabase;
 
@@ -32,7 +33,16 @@ namespace Server.Controllers
                     .Limit(10)
                     .Get();
 
-                return Ok(result.Models);
+                // DTO 변환 (BaseModel 직렬화 오류 방지)
+                var response = result.Models.Select(m => new GameRankingResponse
+                {
+                    Id = m.Id,
+                    Nickname = m.Nickname,
+                    Score = m.Score,
+                    CreatedAt = m.CreatedAt,
+                });
+
+                return Ok(response);
             }
             catch (Exception ex)
             {
@@ -42,7 +52,7 @@ namespace Server.Controllers
 
         // 점수 등록
         [HttpPost]
-        public async Task<IActionResult> AddRanking([FromBody] GameRanking ranking)
+        public async Task<IActionResult> AddRanking([FromBody] GameRankingRequest request)
         {
             try
             {
@@ -62,25 +72,63 @@ namespace Server.Controllers
                 }
 
                 // 간단한 유효성 검사
-                if (string.IsNullOrWhiteSpace(ranking.Nickname) || ranking.Score <= 0)
+                if (string.IsNullOrWhiteSpace(request.Nickname) || request.Score <= 0)
                 {
                     return BadRequest("Invalid data.");
                 }
 
                 // 닉네임 길이 제한
-                if (ranking.Nickname.Length > 10)
+                string finalNickname = request.Nickname;
+                if (finalNickname.Length > 10)
                 {
-                    ranking.Nickname = ranking.Nickname.Substring(0, 10);
+                    finalNickname = finalNickname.Substring(0, 10);
                 }
 
-                var response = await _supabaseClient.From<GameRanking>().Insert(ranking);
+                var model = new GameRanking
+                {
+                    Nickname = finalNickname,
+                    Score = request.Score,
+                    CreatedAt = DateTime.UtcNow,
+                };
 
-                return Ok(response.Models.FirstOrDefault());
+                var response = await _supabaseClient.From<GameRanking>().Insert(model);
+                var created = response.Models.FirstOrDefault();
+
+                if (created == null)
+                {
+                    return StatusCode(500, new { message = "Failed to create ranking record." });
+                }
+
+                return Ok(
+                    new GameRankingResponse
+                    {
+                        Id = created.Id,
+                        Nickname = created.Nickname,
+                        Score = created.Score,
+                        CreatedAt = created.CreatedAt,
+                    }
+                );
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = ex.ToString() });
             }
         }
+    }
+
+    // 요청 DTO
+    public class GameRankingRequest
+    {
+        public string Nickname { get; set; } = string.Empty;
+        public double Score { get; set; }
+    }
+
+    // 응답 DTO
+    public class GameRankingResponse
+    {
+        public long Id { get; set; }
+        public string Nickname { get; set; } = string.Empty;
+        public double Score { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }
