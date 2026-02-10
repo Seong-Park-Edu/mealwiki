@@ -11,9 +11,9 @@ const RankingBoard = ({ refreshTrigger }) => {
             // API 주소는 환경에 따라 다를 수 있으므로 상대 경로 또는 환경 변수 사용
             // 개발 환경에서는 package.json의 proxy 설정이나 vite.config.js 설정을 따름
             // 일단 직접 URL 호출 (배포 환경 고려 필요)
-            const response = await axios.get('https://mealwiki.com/api/gameranking');
-            // 로컬 테스트 시: http://localhost:5129/api/gameranking (포트 확인 필요)
-            // 배포 시: https://mealwiki.com/api/gameranking
+            // 배포 환경과 로컬 환경 모두 대응하기 위해 상대 경로 사용
+            // (Vite proxy 또는 같은 도메인 배포 가정)
+            const response = await axios.get('/api/gameranking');
 
             if (Array.isArray(response.data)) {
                 setRankings(response.data);

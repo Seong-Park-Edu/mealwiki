@@ -58,7 +58,7 @@ const ParticleSurvivalPage = () => {
 
         try {
             // API 주소는 환경에 따라 다를 수 있음 (RankingBoard와 동일하게 맞춤)
-            await axios.post('https://mealwiki.com/api/gameranking', {
+            await axios.post('/api/gameranking', {
                 nickname: nickname,
                 score: parseFloat(survivedTime)
             });
