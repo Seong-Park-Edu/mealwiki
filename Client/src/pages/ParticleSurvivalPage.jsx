@@ -198,16 +198,27 @@ const ParticleSurvivalPage = () => {
                 }
                 break;
             case 'snake':
-                p.x = random(0, CANVAS_WIDTH);
-                p.y = random(0, CANVAS_HEIGHT);
+                // 화면 끝에서 생성 (무작위 4면 중 하나)
+                if (Math.random() < 0.5) {
+                    p.x = Math.random() < 0.5 ? -50 : CANVAS_WIDTH + 50;
+                    p.y = random(0, CANVAS_HEIGHT);
+                } else {
+                    p.x = random(0, CANVAS_WIDTH);
+                    p.y = Math.random() < 0.5 ? -50 : CANVAS_HEIGHT + 50;
+                }
+
                 const dx = playerRef.current.x - p.x;
                 const dy = playerRef.current.y - p.y;
                 const angle = Math.atan2(dy, dx);
-                p.vx = Math.cos(angle) * 2.5; // 속도 낮춤
-                p.vy = Math.sin(angle) * 2.5;
+
+                // 초기 속도 설정
+                p.vx = Math.cos(angle) * 3;
+                p.vy = Math.sin(angle) * 3;
+
                 p.history = [];
                 p.size = 6;
                 p.color = '#FFEB3B';
+                p.homingTime = 100; // 약 1.5 ~ 2초간만 유도
                 break;
             case 'surface':
                 p.x = random(0, CANVAS_WIDTH);
@@ -271,11 +282,17 @@ const ParticleSurvivalPage = () => {
                 p.history.push({ x: p.x, y: p.y });
                 if (p.history.length > 20) p.history.shift();
 
-                const dx = playerRef.current.x - p.x;
-                const dy = playerRef.current.y - p.y;
-                const angle = Math.atan2(dy, dx);
-                p.vx = p.vx * 0.96 + Math.cos(angle) * 0.2;
-                p.vy = p.vy * 0.96 + Math.sin(angle) * 0.2;
+                // 일정 시간동안만 플레이어 방향으로 유도
+                if (p.homingTime > 0) {
+                    p.homingTime--;
+                    const dx = playerRef.current.x - p.x;
+                    const dy = playerRef.current.y - p.y;
+                    const angle = Math.atan2(dy, dx);
+
+                    // 유도 성능 (기존 유지)
+                    p.vx = p.vx * 0.96 + Math.cos(angle) * 0.2;
+                    p.vy = p.vy * 0.96 + Math.sin(angle) * 0.2;
+                }
             }
             if (p.type === 'surface') {
                 if (p.size < p.maxSize) {
