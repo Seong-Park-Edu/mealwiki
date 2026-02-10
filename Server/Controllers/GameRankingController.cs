@@ -12,10 +12,12 @@ namespace Server.Controllers
     public class GameRankingController : ControllerBase
     {
         private readonly Client _supabaseClient;
+        private readonly IConfiguration _configuration;
 
-        public GameRankingController(Client supabaseClient)
+        public GameRankingController(Client supabaseClient, IConfiguration configuration)
         {
             _supabaseClient = supabaseClient;
+            _configuration = configuration;
         }
 
         // TOP 10 랭킹 조회
@@ -34,7 +36,7 @@ namespace Server.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new { message = ex.ToString() });
             }
         }
 
@@ -44,6 +46,21 @@ namespace Server.Controllers
         {
             try
             {
+                // [안전장치] 설정 확인
+                var url = _configuration["Supabase:Url"];
+                var key = _configuration["Supabase:Key"];
+
+                if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(key))
+                {
+                    return StatusCode(
+                        500,
+                        new
+                        {
+                            message = "Server Configuration Error: Supabase:Url or Supabase:Key is missing in Azure Settings.",
+                        }
+                    );
+                }
+
                 // 간단한 유효성 검사
                 if (string.IsNullOrWhiteSpace(ranking.Nickname) || ranking.Score <= 0)
                 {
@@ -62,7 +79,7 @@ namespace Server.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return StatusCode(500, new { message = ex.ToString() });
             }
         }
     }
