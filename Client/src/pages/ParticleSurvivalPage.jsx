@@ -18,13 +18,15 @@ const ParticleSurvivalPage = () => {
     // 게임 상태 (UI 표시용)
     const [gameState, setGameState] = useState('ready'); // ready, playing, gameover
     const [survivedTime, setSurvivedTime] = useState(0);
-    const [lifeTime, setLifeTime] = useState(1.0);
+    const [lifeTime, setLifeTime] = useState(2.0); // 기본 생명 2초로 변경
     const [currentPattern, setCurrentPattern] = useState("1단계: 가로 입자");
 
     // ★ [핵심 수정] 게임 로직용 Refs (실시간 값 추적용)
-    // useState는 렌더링 딜레이가 있어서 게임 로직에는 Ref를 써야 재시작 버그가 안 생깁니다.
-    const lifeTimeRef = useRef(1.0);
+    const lifeTimeRef = useRef(2.0);
     const isGameOverRef = useRef(false);
+
+    // 이스터에그 상태
+    const [titleClickCount, setTitleClickCount] = useState(0);
 
     // 게임 루프 Refs
     const requestRef = useRef();
@@ -40,16 +42,30 @@ const ParticleSurvivalPage = () => {
 
     const random = (min, max) => Math.random() * (max - min) + min;
 
+    // ★ 이스터에그 핸들러
+    const handleTitleClick = () => {
+        setTitleClickCount(prev => {
+            const newCount = prev + 1;
+            if (newCount === 10) {
+                alert("😈 개발자 모드: 다음 게임 생명이 10초로 적용됩니다!");
+            }
+            return newCount;
+        });
+    };
+
     // ★ 게임 시작
     const startGame = () => {
         // 1. 상태 초기화
         setGameState('playing');
         setSurvivedTime(0);
-        setLifeTime(1.0);
+
+        const startLife = titleClickCount >= 10 ? 10.0 : 2.0;
+
+        setLifeTime(startLife);
         setCurrentPattern("1단계: 가로 입자");
 
         // 2. Ref 즉시 초기화 (재시작 버그 해결 핵심)
-        lifeTimeRef.current = 1.0;
+        lifeTimeRef.current = startLife;
         isGameOverRef.current = false;
 
         // 3. 게임 엔티티 초기화
@@ -79,12 +95,17 @@ const ParticleSurvivalPage = () => {
         if (seconds > 70) types.push('d-line');
         if (seconds > 80) types.push('p-line');
         if (seconds > 90) types.push('snake');
-        if (seconds > 100) types.push('surface');
+        if (seconds > 100) types.push('h-area');
+        if (seconds > 110) types.push('v-area');
+        if (seconds > 120) types.push('d-area');
+        if (seconds > 130) types.push('spiral');
+        if (seconds > 140) types.push('surface');
 
         const baseChance = 0.2 + (seconds * 0.01);
         const spawnChance = Math.min(1.0, baseChance * 0.2);
 
-        if (seconds > 100 && Math.random() > 0.3) {
+        if (seconds > 140 && Math.random() > 0.3) {
+            // 최종장에서는 난이도 조절 (너무 많이 나오면 불가능)
         } else if (Math.random() > spawnChance) {
             return;
         }
@@ -102,6 +123,10 @@ const ParticleSurvivalPage = () => {
             case 'd-line': patternName = "8단계: +대각 레이저"; break;
             case 'p-line': patternName = "9단계: +곡선 레이저"; break;
             case 'snake': patternName = "10단계: +유도 지렁이"; break;
+            case 'h-area': patternName = "11단계: +가로 '면'공격"; break;
+            case 'v-area': patternName = "12단계: +세로 '면'공격"; break;
+            case 'd-area': patternName = "13단계: +대각 '면'공격"; break;
+            case 'spiral': patternName = "14단계: +나선환"; break;
             case 'surface': patternName = "최종장: +공간 왜곡(면)"; break;
             default: patternName = "생존 중...";
         }
@@ -168,27 +193,37 @@ const ParticleSurvivalPage = () => {
             case 'v-line':
             case 'd-line':
             case 'p-line':
+            case 'h-area': // New
+            case 'v-area': // New
+            case 'd-area': // New
                 p.isLine = true;
                 p.length = 200;
-                p.lineWidth = 4;
 
-                if (type === 'h-line') {
+                // 면 공격은 두께 2배
+                if (type.includes('area')) {
+                    p.lineWidth = 15;
+                    p.color = '#E91E63'; // 붉은 계열 강조
+                } else {
+                    p.lineWidth = 4;
+                }
+
+                if (type === 'h-line' || type === 'h-area') {
                     p.y = random(0, CANVAS_HEIGHT);
                     p.x = Math.random() < 0.5 ? -200 : CANVAS_WIDTH + 200;
                     p.vx = p.x < 0 ? speed * 1.2 : -speed * 1.2;
-                    p.color = '#F44336';
-                } else if (type === 'v-line') {
+                    if (!type.includes('area')) p.color = '#F44336';
+                } else if (type === 'v-line' || type === 'v-area') {
                     p.x = random(0, CANVAS_WIDTH);
                     p.y = Math.random() < 0.5 ? -200 : CANVAS_HEIGHT + 200;
                     p.vy = p.y < 0 ? speed * 1.2 : -speed * 1.2;
-                    p.color = '#F44336';
-                } else if (type === 'd-line') {
+                    if (!type.includes('area')) p.color = '#F44336';
+                } else if (type === 'd-line' || type === 'd-area') {
                     p.x = Math.random() < 0.5 ? -200 : CANVAS_WIDTH + 200;
                     p.y = random(0, CANVAS_HEIGHT);
                     p.vx = p.x < 0 ? speed : -speed;
                     p.vy = speed;
-                    p.color = '#F44336';
-                } else {
+                    if (!type.includes('area')) p.color = '#F44336';
+                } else { // p-line
                     p.x = Math.random() < 0.5 ? -50 : CANVAS_WIDTH + 50;
                     p.y = CANVAS_HEIGHT;
                     p.vx = p.x < 0 ? 2 : -2;
@@ -219,6 +254,16 @@ const ParticleSurvivalPage = () => {
                 p.size = 6;
                 p.color = '#FFEB3B';
                 p.homingTime = 100; // 약 1.5 ~ 2초간만 유도
+                break;
+            case 'spiral': // 나선환
+                p.x = CANVAS_WIDTH / 2;
+                p.y = CANVAS_HEIGHT / 2; // 중앙 생성
+                p.radius = 0;
+                p.angle = random(0, Math.PI * 2);
+                p.angularSpeed = 0.1;
+                p.radialSpeed = 2;
+                p.size = 5;
+                p.color = '#9C27B0';
                 break;
             case 'surface':
                 p.x = random(0, CANVAS_WIDTH);
@@ -337,7 +382,7 @@ const ParticleSurvivalPage = () => {
                 ctx.lineWidth = p.lineWidth;
                 ctx.stroke();
 
-                hit = distToSegment({ x: playerRef.current.x, y: playerRef.current.y }, { x: startX, y: startY }, { x: endX, y: endY }) < (playerRef.current.radius + 2);
+                hit = distToSegment({ x: playerRef.current.x, y: playerRef.current.y }, { x: startX, y: startY }, { x: endX, y: endY }) < (playerRef.current.radius + p.lineWidth / 2);
 
             } else {
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
@@ -453,9 +498,14 @@ const ParticleSurvivalPage = () => {
 
     return (
         <div style={{ textAlign: 'center', padding: '20px', fontFamily: 'sans-serif' }}>
-            <h1 style={{ fontSize: '24px', marginBottom: '10px' }}>☠️ 극한의 생존 게임</h1>
+            <h1
+                onClick={handleTitleClick}
+                style={{ fontSize: '24px', marginBottom: '10px', cursor: 'pointer', userSelect: 'none' }}
+            >
+                ☠️ 극한의 생존 게임
+            </h1>
             <p style={{ color: '#666', marginBottom: '15px' }}>
-                입자에 닿으면 생명이 줄어듭니다! (단 1초)
+                입자에 닿으면 생명이 줄어듭니다! (단 {titleClickCount >= 10 ? 10 : 2}초)
             </p>
 
             <div style={{
