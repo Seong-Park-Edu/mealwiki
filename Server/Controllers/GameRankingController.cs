@@ -8,7 +8,7 @@ using Supabase;
 namespace Server.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/gameranking")]
     public class GameRankingController : ControllerBase
     {
         private readonly Client _supabaseClient;
