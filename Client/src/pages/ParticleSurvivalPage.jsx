@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import AdSenseUnit from '../components/AdSenseUnit';
+import RankingBoard from '../components/RankingBoard';
+import axios from 'axios';
 
 const ParticleSurvivalPage = () => {
     const navigate = useNavigate();
@@ -20,6 +19,11 @@ const ParticleSurvivalPage = () => {
     const [survivedTime, setSurvivedTime] = useState(0);
     const [lifeTime, setLifeTime] = useState(4.0); // 기본 생명 4초로 변경
     const [currentPattern, setCurrentPattern] = useState("1단계: 가로 입자");
+
+    // 랭킹 관련 상태
+    const [nickname, setNickname] = useState("");
+    const [isRankSubmitted, setIsRankSubmitted] = useState(false);
+    const [refreshRanking, setRefreshRanking] = useState(0); // 랭킹 보드 새로고침용
 
     // ★ [핵심 수정] 게임 로직용 Refs (실시간 값 추적용)
     const lifeTimeRef = useRef(4.0);
@@ -42,6 +46,29 @@ const ParticleSurvivalPage = () => {
 
     const random = (min, max) => Math.random() * (max - min) + min;
 
+    // ★ 랭킹 등록 핸들러
+    const submitRanking = async () => {
+        if (!nickname.trim()) {
+            alert("닉네임을 입력해주세요!");
+            return;
+        }
+
+        try {
+            // API 주소는 환경에 따라 다를 수 있음 (RankingBoard와 동일하게 맞춤)
+            await axios.post('https://mealwiki.com/api/gameranking', {
+                nickname: nickname,
+                score: parseFloat(survivedTime)
+            });
+
+            alert("랭킹이 등록되었습니다!");
+            setIsRankSubmitted(true);
+            setRefreshRanking(prev => prev + 1); // 랭킹 보드 갱신 트리거
+        } catch (error) {
+            console.error("Ranking submit failed:", error);
+            alert("랭킹 등록에 실패했습니다.");
+        }
+    };
+
     // ★ 이스터에그 핸들러
     const handleTitleClick = () => {
         setTitleClickCount(prev => {
@@ -58,6 +85,7 @@ const ParticleSurvivalPage = () => {
         // 1. 상태 초기화
         setGameState('playing');
         setSurvivedTime(0);
+        setIsRankSubmitted(false); // 랭킹 제출 상태 초기화
 
         const startLife = titleClickCount >= 10 ? 10.0 : 4.0;
 
@@ -563,6 +591,26 @@ const ParticleSurvivalPage = () => {
                     <div style={overlayStyle}>
                         <h2 style={{ color: 'red' }}>사망하셨습니다 ☠️</h2>
                         <p>당신의 기록: <strong>{survivedTime}초</strong></p>
+
+                        {/* 랭킹 등록 폼 */}
+                        {!isRankSubmitted ? (
+                            <div style={{ margin: '15px 0', padding: '10px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}>
+                                <input
+                                    type="text"
+                                    placeholder="닉네임 입력 (최대 10자)"
+                                    value={nickname}
+                                    maxLength={10}
+                                    onChange={(e) => setNickname(e.target.value)}
+                                    style={{ padding: '8px', borderRadius: '4px', border: 'none', marginRight: '5px' }}
+                                />
+                                <button onClick={submitRanking} style={{ padding: '8px 12px', backgroundColor: '#E91E63', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                    등록
+                                </button>
+                            </div>
+                        ) : (
+                            <p style={{ color: '#4CAF50', fontWeight: 'bold' }}>랭킹 등록 완료!</p>
+                        )}
+
                         <button onClick={startGame} style={btnStyle}>다시 도전</button>
                         <button onClick={() => navigate(-1)} style={{ ...btnStyle, backgroundColor: '#666', marginTop: '10px' }}>
                             나가기
@@ -570,6 +618,9 @@ const ParticleSurvivalPage = () => {
                     </div>
                 )}
             </div>
+
+            {/* ★ 명예의 전당 (랭킹 보드) 추가 */}
+            <RankingBoard refreshTrigger={refreshRanking} />
 
             {/* ★ 게임 화면 아래에 안전한 여백을 두고 광고 배치 */}
             {/* 중간 광고 */}
