@@ -32,14 +32,7 @@ builder.Services.AddCors(options =>
         policy =>
         {
             // 허용할 도메인들을 리스트로 작성합니다.
-            policy
-                .WithOrigins(
-                    "https://mealwiki.com", // 구입하신 커스텀 도메인
-                    "https://mealwiki.vercel.app", // Vercel 기본 도메인
-                    "http://localhost:5173" // 로컬 개발 환경
-                )
-                .AllowAnyHeader()
-                .AllowAnyMethod();
+            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
         }
     );
 });
