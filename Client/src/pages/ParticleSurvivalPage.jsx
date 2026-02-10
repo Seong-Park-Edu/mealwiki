@@ -18,11 +18,11 @@ const ParticleSurvivalPage = () => {
     // 게임 상태 (UI 표시용)
     const [gameState, setGameState] = useState('ready'); // ready, playing, gameover
     const [survivedTime, setSurvivedTime] = useState(0);
-    const [lifeTime, setLifeTime] = useState(2.0); // 기본 생명 2초로 변경
+    const [lifeTime, setLifeTime] = useState(4.0); // 기본 생명 4초로 변경
     const [currentPattern, setCurrentPattern] = useState("1단계: 가로 입자");
 
     // ★ [핵심 수정] 게임 로직용 Refs (실시간 값 추적용)
-    const lifeTimeRef = useRef(2.0);
+    const lifeTimeRef = useRef(4.0);
     const isGameOverRef = useRef(false);
 
     // 이스터에그 상태
@@ -59,7 +59,7 @@ const ParticleSurvivalPage = () => {
         setGameState('playing');
         setSurvivedTime(0);
 
-        const startLife = titleClickCount >= 10 ? 10.0 : 2.0;
+        const startLife = titleClickCount >= 10 ? 10.0 : 4.0;
 
         setLifeTime(startLife);
         setCurrentPattern("1단계: 가로 입자");
@@ -253,7 +253,7 @@ const ParticleSurvivalPage = () => {
                 p.history = [];
                 p.size = 6;
                 p.color = '#FFEB3B';
-                p.homingTime = 100; // 약 1.5 ~ 2초간만 유도
+                p.homingTime = 30; // 0.5초 유도 (60fps 기준)
                 break;
             case 'spiral': // 나선환
                 p.x = CANVAS_WIDTH / 2;
@@ -505,7 +505,7 @@ const ParticleSurvivalPage = () => {
                 ☠️ 극한의 생존 게임
             </h1>
             <p style={{ color: '#666', marginBottom: '15px' }}>
-                입자에 닿으면 생명이 줄어듭니다! (단 {titleClickCount >= 10 ? 10 : 2}초)
+                입자에 닿으면 생명이 줄어듭니다! (단 {titleClickCount >= 10 ? 10 : 4}초)
             </p>
 
             <div style={{
