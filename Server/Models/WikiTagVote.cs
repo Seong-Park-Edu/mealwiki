@@ -13,13 +13,13 @@ namespace Server.Models
         // ★ PostId 삭제됨
 
         [Column("restaurant_id")]
-        public required string RestaurantId { get; set; } // ★ 식당에 종속됨
+        public string RestaurantId { get; set; } = string.Empty; // ★ 식당에 종속됨
 
         [Column("user_id")]
         public Guid UserId { get; set; }
 
         [Column("tag")]
-        public required string Tag { get; set; }
+        public string Tag { get; set; } = string.Empty;
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }

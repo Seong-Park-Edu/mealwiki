@@ -8,16 +8,16 @@ namespace Server.Models
     public class RouletteRoom : BaseModel
     {
         [PrimaryKey("id")]
-        public required string Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
         [Column("room_code")]
-        public required string RoomCode { get; set; }
+        public string RoomCode { get; set; } = string.Empty;
 
         [Column("host_id")]
-        public required string HostId { get; set; }
+        public string HostId { get; set; } = string.Empty;
 
         [Column("title")]
-        public required string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
         [Column("status")]
         public string Status { get; set; } // waiting, spinning, finished

@@ -15,11 +15,11 @@ namespace Server.Models
 
         [Column("restaurant_id")]
         [JsonProperty("restaurant_id")]
-        public required string RestaurantId { get; set; }
+        public string RestaurantId { get; set; } = string.Empty;
 
         [Column("content")]
         [JsonProperty("content")]
-        public required string Content { get; set; }
+        public string Content { get; set; } = string.Empty;
 
         [Column("version")]
         [JsonProperty("version")]
@@ -60,7 +60,7 @@ namespace Server.Models
         public Guid? PostId { get; set; }
 
         [Column("content")]
-        public required string Content { get; set; }
+        public string Content { get; set; } = string.Empty;
 
         [Column("version")]
         public int Version { get; set; }

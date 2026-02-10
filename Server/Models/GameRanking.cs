@@ -12,7 +12,7 @@ namespace Server.Models
         public long Id { get; set; }
 
         [Column("nickname")]
-        public required string Nickname { get; set; }
+        public string Nickname { get; set; } = string.Empty;
 
         [Column("score")]
         public double Score { get; set; } // 생존 시간 (초)

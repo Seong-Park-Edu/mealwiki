@@ -14,7 +14,7 @@ namespace Server.Models
         public Guid UserId { get; set; }
 
         [Column("restaurant_id")]
-        public required string RestaurantId { get; set; }
+        public string RestaurantId { get; set; } = string.Empty;
 
         // ★ [추가] 추천 대상(기여자) ID
         [Column("target_user_id")]

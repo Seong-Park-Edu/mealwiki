@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Server.Controllers // 본인의 프로젝트 네임스페이스로 변경하세요
 {
@@ -13,13 +13,17 @@ namespace Server.Controllers // 본인의 프로젝트 네임스페이스로 변
         private readonly string _apiKey;
         private readonly HttpClient _httpClient;
 
-        public GeminiLunchController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public GeminiLunchController(
+            IHttpClientFactory httpClientFactory,
+            IConfiguration configuration
+        )
         {
             // API 키를 비밀 금고(User Secrets)에서 키를 꺼내와서 변수에 넣습니다.
-            _apiKey = configuration["Gemini:ApiKey"] ?? throw new ArgumentNullException("GeminiApiKey 설정이 필요합니다.");
+            _apiKey =
+                configuration["Gemini:ApiKey"]
+                ?? throw new ArgumentNullException("GeminiApiKey 설정이 필요합니다.");
             _httpClient = httpClientFactory.CreateClient();
         }
-
 
         [HttpGet("models")]
         public async Task<IActionResult> GetAvailableModels()
@@ -41,15 +45,16 @@ namespace Server.Controllers // 본인의 프로젝트 네임스페이스로 변
             }
         }
 
-
         [HttpPost("recommend")]
         public async Task<IActionResult> GetRecommendation([FromBody] UserInfo input)
         {
             // 1. Gemini API URL (모델: gemini-1.5-flash)
-            string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={_apiKey}";
+            string url =
+                $"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={_apiKey}";
 
             // 2. 프롬프트: 운세와 메뉴를 JSON으로 달라고 강력하게 요청
-            var prompt = $@"
+            var prompt =
+                $@"
                 너는 30년 경력의 사주 명리학자야. 
                 사용자 정보: [이름: {input.Name}, 생년월일: {input.BirthDate}, 태어난 시간: {input.BirthTime}, 성별: {input.Gender}]
                 오늘 날짜: {DateTime.Now:yyyy-MM-dd}
@@ -73,11 +78,14 @@ namespace Server.Controllers // 본인의 프로젝트 네임스페이스로 변
             var requestBody = new
             {
                 contents = new[] { new { parts = new[] { new { text = prompt } } } },
-                generationConfig = new { response_mime_type = "application/json" } // JSON 모드 강제
+                generationConfig = new { response_mime_type = "application/json" }, // JSON 모드 강제
             };
 
             var jsonContent = new StringContent(
-                JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+                JsonSerializer.Serialize(requestBody),
+                Encoding.UTF8,
+                "application/json"
+            );
 
             try
             {
@@ -108,11 +116,11 @@ namespace Server.Controllers // 본인의 프로젝트 네임스페이스로 변
     // --- DTO 클래스들 ---
     public class UserInfo
     {
-        public string Name { get; set; } // ★ 이름 추가
-        public string BirthDate { get; set; } // 예: 1996-01-01
-        public string BirthTime { get; set; } // 예: 14:30
-        public string Gender { get; set; } // "male" or "female"
-        public string MealType { get; set; } // "아침", "점심", "저녁"
+        public string? Name { get; set; } // ★ 이름 추가
+        public string? BirthDate { get; set; } // 예: 1996-01-01
+        public string? BirthTime { get; set; } // 예: 14:30
+        public string? Gender { get; set; } // "male" or "female"
+        public string? MealType { get; set; } // "아침", "점심", "저녁"
     }
 
     // Gemini 응답 매핑용 클래스
@@ -121,16 +129,19 @@ namespace Server.Controllers // 본인의 프로젝트 네임스페이스로 변
         [JsonPropertyName("candidates")]
         public List<Candidate> Candidates { get; set; }
     }
+
     public class Candidate
     {
         [JsonPropertyName("content")]
         public Content Content { get; set; }
     }
+
     public class Content
     {
         [JsonPropertyName("parts")]
         public List<Part> Parts { get; set; }
     }
+
     public class Part
     {
         [JsonPropertyName("text")]

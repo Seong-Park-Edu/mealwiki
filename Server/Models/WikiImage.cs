@@ -11,7 +11,7 @@ namespace Server.Models
         public Guid Id { get; set; }
 
         [Column("restaurant_id")]
-        public required string RestaurantId { get; set; }
+        public string RestaurantId { get; set; } = string.Empty;
 
         [Column("user_id")]
         public Guid UserId { get; set; }
