@@ -15,11 +15,17 @@ builder.Services.AddHttpClient<KakaoService>();
 
 // Supabase 클라이언트 등록
 // (나중에 Azure 사이트 설정에 'Supabase:Url'과 'Supabase:Key'를 입력하면 여기서 자동으로 읽어옵니다!)
-var url = builder.Configuration["Supabase:Url"] ?? throw new ArgumentNullException("Supabase:Url");
+var url = builder.Configuration["Supabase:Url"];
 var key = builder.Configuration["Supabase:Key"];
 
+// ★ [안전장치] URL이 없으면 서버가 죽진 않게 하고, 대신 로그를 남깁니다. (나중에 500 에러로 확인 가능)
+if (string.IsNullOrEmpty(url))
+{
+    Console.WriteLine("CRITICAL: Supabase:Url configuration is missing!");
+}
+
 builder.Services.AddScoped<Supabase.Client>(_ => new Supabase.Client(
-    url,
+    url ?? "http://localhost",
     key,
     new Supabase.SupabaseOptions { AutoRefreshToken = true, AutoConnectRealtime = true }
 ));
@@ -32,7 +38,14 @@ builder.Services.AddCors(options =>
         policy =>
         {
             // 허용할 도메인들을 리스트로 작성합니다.
-            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+            policy
+                .WithOrigins(
+                    "https://mealwiki.com", // 구입하신 커스텀 도메인
+                    "https://mealwiki.vercel.app", // Vercel 기본 도메인
+                    "http://localhost:5173" // 로컬 개발 환경
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod();
         }
     );
 });
