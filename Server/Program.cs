@@ -15,35 +15,36 @@ builder.Services.AddHttpClient<KakaoService>();
 
 // Supabase 클라이언트 등록
 // (나중에 Azure 사이트 설정에 'Supabase:Url'과 'Supabase:Key'를 입력하면 여기서 자동으로 읽어옵니다!)
-var url = builder.Configuration["Supabase:Url"];
+var url = builder.Configuration["Supabase:Url"] ?? throw new ArgumentNullException("Supabase:Url");
 var key = builder.Configuration["Supabase:Key"];
 
-builder.Services.AddScoped<Supabase.Client>(_ =>
-    new Supabase.Client(url, key, new Supabase.SupabaseOptions
-    {
-        AutoRefreshToken = true,
-        AutoConnectRealtime = true
-    }));
+builder.Services.AddScoped<Supabase.Client>(_ => new Supabase.Client(
+    url,
+    key,
+    new Supabase.SupabaseOptions { AutoRefreshToken = true, AutoConnectRealtime = true }
+));
 
 // ★ [수정됨] CORS 설정: 일단 배포 성공을 위해 "모두 허용"으로 변경
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowMealWikiDomains", policy =>
-    {
-        // 허용할 도메인들을 리스트로 작성합니다.
-        policy.WithOrigins(
-                "https://mealwiki.com",           // 구입하신 커스텀 도메인
-                "https://mealwiki.vercel.app", // Vercel 기본 도메인
-                "http://localhost:5173"         // 로컬 개발 환경
-              )
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+    options.AddPolicy(
+        "AllowMealWikiDomains",
+        policy =>
+        {
+            // 허용할 도메인들을 리스트로 작성합니다.
+            policy
+                .WithOrigins(
+                    "https://mealwiki.com", // 구입하신 커스텀 도메인
+                    "https://mealwiki.vercel.app", // Vercel 기본 도메인
+                    "http://localhost:5173" // 로컬 개발 환경
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+    );
 });
 
 var app = builder.Build();
-
-
 
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -54,7 +55,6 @@ app.UseRouting();
 app.UseCors("AllowMealWikiDomains");
 
 app.UseHttpsRedirection();
-
 
 app.UseAuthorization();
 

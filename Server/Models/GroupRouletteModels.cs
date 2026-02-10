@@ -8,23 +8,23 @@ namespace Server.Models
     public class RouletteRoom : BaseModel
     {
         [PrimaryKey("id")]
-        public string Id { get; set; }
+        public required string Id { get; set; }
 
         [Column("room_code")]
-        public string RoomCode { get; set; }
+        public required string RoomCode { get; set; }
 
         [Column("host_id")]
-        public string HostId { get; set; }
+        public required string HostId { get; set; }
 
         [Column("title")]
-        public string Title { get; set; }
+        public required string Title { get; set; }
 
         [Column("status")]
         public string Status { get; set; } // waiting, spinning, finished
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
-        
+
         [Column("winner_menu")]
         public string WinnerMenu { get; set; }
     }

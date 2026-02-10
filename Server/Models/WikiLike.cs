@@ -1,6 +1,6 @@
+using System;
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
-using System;
 
 namespace Server.Models
 {
@@ -14,7 +14,7 @@ namespace Server.Models
         public Guid UserId { get; set; }
 
         [Column("restaurant_id")]
-        public string RestaurantId { get; set; }
+        public required string RestaurantId { get; set; }
 
         // ★ [추가] 추천 대상(기여자) ID
         [Column("target_user_id")]

@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using System;
 using System.IO;
-using System.Threading.Tasks;
 using System.Linq; // FirstOrDefault 사용을 위해 필요
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Server.Models;
 
 namespace Server.Controllers
@@ -12,9 +12,9 @@ namespace Server.Controllers
     // Swagger가 이 클래스를 보고 "아, 이 3개를 폼 데이터로 받는구나"라고 이해합니다.
     public class ImageUploadDto
     {
-        public IFormFile File { get; set; }
-        public string RestaurantId { get; set; }
-        public string Nickname { get; set; }
+        public required IFormFile File { get; set; }
+        public required string RestaurantId { get; set; }
+        public required string Nickname { get; set; }
     }
 
     [Route("api/[controller]")]
@@ -38,8 +38,10 @@ namespace Server.Controllers
             var nickname = request.Nickname;
 
             // 유효성 검사
-            if (file == null || file.Length == 0) return BadRequest("파일이 없습니다.");
-            if (string.IsNullOrEmpty(restaurantId)) return BadRequest("식당 ID가 없습니다.");
+            if (file == null || file.Length == 0)
+                return BadRequest("파일이 없습니다.");
+            if (string.IsNullOrEmpty(restaurantId))
+                return BadRequest("식당 ID가 없습니다.");
 
             try
             {
@@ -53,20 +55,14 @@ namespace Server.Controllers
                 var fileBytes = memoryStream.ToArray();
 
                 // 스토리지 업로드
-                await _supabase.Storage
-                    .From("food-images")
-                    .Upload(fileBytes, uploadPath);
+                await _supabase.Storage.From("food-images").Upload(fileBytes, uploadPath);
 
                 // 공개 URL 가져오기
-                var publicUrl = _supabase.Storage
-                    .From("food-images")
-                    .GetPublicUrl(uploadPath);
+                var publicUrl = _supabase.Storage.From("food-images").GetPublicUrl(uploadPath);
 
                 // DB 저장 로직
                 // 닉네임으로 유저 찾기
-                var userRes = await _supabase.From<User>()
-                                             .Where(u => u.Nickname == nickname)
-                                             .Get();
+                var userRes = await _supabase.From<User>().Where(u => u.Nickname == nickname).Get();
                 var user = userRes.Models.FirstOrDefault();
 
                 if (user != null)
@@ -76,7 +72,7 @@ namespace Server.Controllers
                         RestaurantId = restaurantId,
                         ImageUrl = publicUrl,
                         UserId = user.Id,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.UtcNow,
                     };
                     await _supabase.From<WikiImage>().Insert(newImageRecord);
                 }

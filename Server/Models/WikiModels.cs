@@ -1,24 +1,25 @@
 using Newtonsoft.Json;
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
+
 //Supabase의 테이블(wiki_posts 등)과 짝이 되는 **C# 클래스(Model)**
 namespace Server.Models
 {
     // 1. 위키 본문 (wiki_posts 테이블)
     [Table("wiki_posts")]
     public class WikiPost : BaseModel
-{
+    {
         [PrimaryKey("id")]
         [JsonProperty("id")]
         public Guid Id { get; set; }
 
         [Column("restaurant_id")]
         [JsonProperty("restaurant_id")]
-        public string RestaurantId { get; set; }
+        public required string RestaurantId { get; set; }
 
         [Column("content")]
         [JsonProperty("content")]
-        public string Content { get; set; }
+        public required string Content { get; set; }
 
         [Column("version")]
         [JsonProperty("version")]
@@ -59,7 +60,7 @@ namespace Server.Models
         public Guid? PostId { get; set; }
 
         [Column("content")]
-        public string Content { get; set; }
+        public required string Content { get; set; }
 
         [Column("version")]
         public int Version { get; set; }

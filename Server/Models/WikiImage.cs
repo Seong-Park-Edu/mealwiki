@@ -1,6 +1,6 @@
+using System;
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
-using System;
 
 namespace Server.Models
 {
@@ -11,7 +11,7 @@ namespace Server.Models
         public Guid Id { get; set; }
 
         [Column("restaurant_id")]
-        public string RestaurantId { get; set; }
+        public required string RestaurantId { get; set; }
 
         [Column("user_id")]
         public Guid UserId { get; set; }
