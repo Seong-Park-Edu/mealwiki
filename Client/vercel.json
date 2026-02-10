@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://mealwiki.azurewebsites.net/api/$1"
+      "destination": "https://mealwiki-g2ghfhf8cnb3eder.koreacentral-01.azurewebsites.net/api/$1"
     },
     {
       "source": "/(.*)",
