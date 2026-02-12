@@ -31,6 +31,7 @@ const ParticleSurvivalPage = () => {
     // ★ [핵심 수정] 게임 로직용 Refs (실시간 값 추적용)
     const lifeTimeRef = useRef(4.0);
     const isGameOverRef = useRef(false);
+    const gameTokenRef = useRef(""); // ★ 보안 토큰 저장용
 
     // 이스터에그 상태
     const [titleClickCount, setTitleClickCount] = useState(0);
@@ -60,7 +61,8 @@ const ParticleSurvivalPage = () => {
             // API 주소는 환경에 따라 다를 수 있음 (RankingBoard와 동일하게 맞춤)
             await axios.post('/api/gameranking', {
                 nickname: nickname,
-                score: parseFloat(survivedTime)
+                score: parseFloat(survivedTime),
+                token: gameTokenRef.current // ★ 토큰 함께 전송
             });
 
             alert("랭킹이 등록되었습니다!");
@@ -68,7 +70,11 @@ const ParticleSurvivalPage = () => {
             setRefreshRanking(prev => prev + 1); // 랭킹 보드 갱신 트리거
         } catch (error) {
             console.error("Ranking submit failed:", error);
-            alert("랭킹 등록에 실패했습니다.");
+            if (error.response && error.response.status === 403) {
+                alert("비정상적인 점수 기록이 감지되어 등록이 거부되었습니다.");
+            } else {
+                alert("랭킹 등록에 실패했습니다.");
+            }
         }
     };
 
@@ -84,8 +90,20 @@ const ParticleSurvivalPage = () => {
     };
 
     // ★ 게임 시작
-    const startGame = () => {
-        // 1. 상태 초기화
+    const startGame = async () => {
+        // 1. 보안 토큰 발급 (비동기)
+        try {
+            const response = await axios.post('/api/gameranking/start');
+            if (response.data && response.data.token) {
+                gameTokenRef.current = response.data.token;
+            }
+        } catch (err) {
+            console.error("Failed to start game session:", err);
+            // 토큰 발급 실패해도 게임은 할 수 있게 할지, 막을지 결정.
+            // 여기서는 일단 진행하되 랭킹 등록 시 실패할 것임.
+        }
+
+        // 2. 상태 초기화
         setGameState('playing');
         setSurvivedTime(0);
         setIsRankSubmitted(false); // 랭킹 제출 상태 초기화
@@ -95,19 +113,19 @@ const ParticleSurvivalPage = () => {
         setLifeTime(startLife);
         setCurrentPattern("1단계: 가로 입자");
 
-        // 2. Ref 즉시 초기화 (재시작 버그 해결 핵심)
+        // 3. Ref 즉시 초기화 (재시작 버그 해결 핵심)
         lifeTimeRef.current = startLife;
         isGameOverRef.current = false;
 
-        // 3. 게임 엔티티 초기화
+        // 4. 게임 엔티티 초기화
         particlesRef.current = [];
         playerRef.current = { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2, radius: 8 };
 
-        // 4. 타이머 초기화
+        // 5. 타이머 초기화
         startTimeRef.current = performance.now();
         lastTimeRef.current = performance.now();
 
-        // 5. 기존 루프 취소 후 재시작
+        // 6. 기존 루프 취소 후 재시작
         if (requestRef.current) cancelAnimationFrame(requestRef.current);
         requestRef.current = requestAnimationFrame(gameLoop);
     };
