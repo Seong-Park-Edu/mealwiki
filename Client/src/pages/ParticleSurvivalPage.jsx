@@ -379,7 +379,16 @@ const ParticleSurvivalPage = () => {
         // 이미 게임오버 상태라면 루프 중단 (안전장치)
         if (isGameOverRef.current) return;
 
-        const deltaTime = timestamp - lastTimeRef.current;
+        let deltaTime = timestamp - lastTimeRef.current;
+
+        // ★ [핵심 보정] 델타 타임이 너무 크면(예: 1초 이상) 백그라운드였던 것으로 간주하고 무시
+        if (deltaTime > 1000) {
+            console.log("Background or Lag detected. Delta:", deltaTime);
+            // 흐른 시간만큼 시작 시간을 뒤로 밀어버림 (시간 정지 효과)
+            startTimeRef.current += (deltaTime - 16);
+            deltaTime = 16; // 강제로 1프레임(약 16ms)으로 고정
+        }
+
         const elapsedTime = timestamp - startTimeRef.current;
         lastTimeRef.current = timestamp;
 
