@@ -32,6 +32,7 @@ const ParticleSurvivalPage = () => {
     const lifeTimeRef = useRef(4.0);
     const isGameOverRef = useRef(false);
     const gameTokenRef = useRef(""); // ★ 보안 토큰 저장용
+    const backgroundStartTimeRef = useRef(0); // 백그라운드 진입 시간
 
     // 이스터에그 상태
     const [titleClickCount, setTitleClickCount] = useState(0);
@@ -44,11 +45,53 @@ const ParticleSurvivalPage = () => {
     const particlesRef = useRef([]);
     const lastTouchRef = useRef({ x: 0, y: 0 }); // 마지막 터치 위치 저장용
 
+    // ★ 일시정지 상태
+    const [isPaused, setIsPaused] = useState(false);
+
     // 화면 크기
     const CANVAS_WIDTH = Math.min(window.innerWidth - 60, 400);
     const CANVAS_HEIGHT = 400;
 
     const random = (min, max) => Math.random() * (max - min) + min;
+
+    // ★ [핵심] 백그라운드 감지 및 처리
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                // 백그라운드로 가면 게임 일시정지
+                if (gameState === 'playing' && !isGameOverRef.current) {
+                    setIsPaused(true);
+                    backgroundStartTimeRef.current = performance.now();
+                    cancelAnimationFrame(requestRef.current);
+                }
+            } else {
+                // 포그라운드로 돌아왔을 때 처리 (자동 재시작 하지 않고 '일시정지' 상태 유지)
+                // 사용자가 명시적으로 '계속하기'를 눌러야 함
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [gameState]);
+
+    // ★ 게임 재개 (일시정지 해제)
+    const resumeGame = () => {
+        if (!isPaused) return;
+
+        const now = performance.now();
+        const pauseDuration = now - backgroundStartTimeRef.current;
+
+        // ★ [중요] 흐른 시간만큼 시작 시간을 뒤로 미룸 (백그라운드 시간 삭제)
+        startTimeRef.current += pauseDuration;
+        lastTimeRef.current = now; // 델타 타임 튀는 것 방지
+
+        setIsPaused(false);
+        backgroundStartTimeRef.current = 0;
+
+        requestRef.current = requestAnimationFrame(gameLoop);
+    };
 
     // ★ 랭킹 등록 핸들러
     const submitRanking = async () => {
@@ -107,6 +150,7 @@ const ParticleSurvivalPage = () => {
         setGameState('playing');
         setSurvivedTime(0);
         setIsRankSubmitted(false); // 랭킹 제출 상태 초기화
+        setIsPaused(false); // 일시정지 해제
 
         const startLife = titleClickCount >= 10 ? 10.0 : 4.0;
 
@@ -605,6 +649,17 @@ const ParticleSurvivalPage = () => {
                         <h2>준비되셨나요?</h2>
                         <p>생명은 단 4초입니다!</p>
                         <button onClick={startGame} style={btnStyle}>게임 시작</button>
+                    </div>
+                )}
+
+                {/* ★ 일시정지 오버레이 */}
+                {isPaused && (
+                    <div style={overlayStyle}>
+                        <h2>⏸ 일시정지</h2>
+                        <p>게임을 계속하시겠습니까?</p>
+                        <button onClick={resumeGame} style={{ ...btnStyle, backgroundColor: '#2196F3' }}>
+                            계속하기
+                        </button>
                     </div>
                 )}
 
